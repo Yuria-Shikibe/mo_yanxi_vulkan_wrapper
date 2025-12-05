@@ -152,7 +152,7 @@ namespace mo_yanxi::vk{
 			constexpr VkDeviceSize bpi = 4;
 
 			buffer staging{templates::create_staging_buffer(
-				*image.get_allocator(),
+				image.get_allocator(),
 				get_mipmap_pixels(region.extent.width * region.extent.height, maxProvMipLevel) * bpi)
 			};
 
