@@ -46,6 +46,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup Vulkan
         uses: humbletim/setup-vulkan-sdk@v1.2.1
