@@ -1,7 +1,7 @@
 name: Xmake Build
 
 env:
-  TARGET_NAME: mo_yanxi.utility
+  TARGET_NAME: mo_yanxi.vulkan_wrapper
   LLVM_VER: 21
   VULKAN_VER: 1.4.304.1
 
@@ -61,7 +61,7 @@ jobs:
         uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: latest
-      #          actions-cache-folder: '.xmake-cache'
+          actions-cache-folder: '.xmake-cache'
 
 
       - name: Install LLVM  (Linux Clang only)
