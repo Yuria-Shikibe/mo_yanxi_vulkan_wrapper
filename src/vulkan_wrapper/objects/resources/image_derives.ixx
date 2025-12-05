@@ -258,7 +258,7 @@ namespace mo_yanxi::vk{
 					1, &barrier);
 
 			for(const texture_buffer_write& arg : args){
-				cmd::copy_buffer_to_image(command_buffer, arg.buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, {VkBufferImageCopy{
+				cmd::copy_buffer_to_image(command_buffer, arg.buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, std::initializer_list{VkBufferImageCopy{
 					.bufferOffset = arg.buffer_offset,
 					.imageSubresource = {
 						.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,

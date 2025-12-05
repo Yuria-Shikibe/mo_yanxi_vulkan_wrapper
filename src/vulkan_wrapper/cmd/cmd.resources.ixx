@@ -128,7 +128,7 @@ namespace mo_yanxi::vk::cmd{
 	export
 	void copy_image_to_buffer(
 		VkCommandBuffer command_buffer, VkImage src, VkBuffer dst, VkImageLayout expectedLayout,
-		std::initializer_list<VkBufferImageCopy>& rng){
+		std::initializer_list<VkBufferImageCopy> rng){
 		::vkCmdCopyImageToBuffer(command_buffer, src, expectedLayout, dst,
 		                         static_cast<std::uint32_t>(std::ranges::size(rng)),
 		                         std::ranges::cdata(rng)
@@ -681,7 +681,7 @@ namespace mo_yanxi::vk::cmd{
 
 		VkDeviceSize offset = 0;
 		for(std::uint32_t i = 0; i < provided_levels - 1; ++i){
-			cmd::copy_buffer_to_image(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, {VkBufferImageCopy{
+			cmd::copy_buffer_to_image(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, std::initializer_list{VkBufferImageCopy{
 				.bufferOffset = offset,
 				.bufferRowLength = 0,
 				.bufferImageHeight = 0,
@@ -709,7 +709,7 @@ namespace mo_yanxi::vk::cmd{
 			if(region.extent.width == 0 || region.extent.height == 0) break;
 		}
 
-		cmd::copy_buffer_to_image(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, {VkBufferImageCopy{
+		cmd::copy_buffer_to_image(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, std::initializer_list{VkBufferImageCopy{
 			.bufferOffset = offset,
 			.bufferRowLength = 0,
 			.bufferImageHeight = 0,
