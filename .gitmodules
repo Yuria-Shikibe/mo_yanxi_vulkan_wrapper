@@ -1,0 +1,7 @@
+
+[submodule "external/mo_yanxi_utility"]
+	path = external/mo_yanxi_utility
+	url = https://github.com/Yuria-Shikibe/mo_yanxi_utility.git
+[submodule "external/VulkanMemoryAllocator"]
+	path = external/VulkanMemoryAllocator
+	url = https://github.com/sawickiap/VulkanMemoryAllocator.git
