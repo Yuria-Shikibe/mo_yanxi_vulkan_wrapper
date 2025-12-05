@@ -26,7 +26,6 @@ target("mo_yanxi.vulkan_wrapper")
 
     add_files("./src/vulkan_wrapper/**.cpp")
     add_files("./src/vulkan_wrapper/**.ixx", {public = true})
-    add_files("main.cpp")
 
     add_includedirs("external/VulkanMemoryAllocator/include", {public = true})
 
