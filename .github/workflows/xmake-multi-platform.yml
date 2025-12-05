@@ -1,0 +1,98 @@
+name: Xmake Build
+
+env:
+  TARGET_NAME: mo_yanxi.utility
+  LLVM_VER: 21
+  VULKAN_VER: latest
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [
+          windows-latest,
+          #          ubuntu-latest
+        ]
+        toolchain: [ msvc, clang, gcc ]
+        mode: [ debug, release ]
+        include:
+          - os: windows-latest
+            toolchain: msvc
+          - os: windows-latest
+            toolchain: clang
+
+          # 2. Linux: 使用 GCC/Clang
+        #          - os: ubuntu-latest
+        #            toolchain: gcc
+        #          - os: ubuntu-latest
+        #            toolchain: clang
+        exclude:
+          - os: windows-latest
+            toolchain: gcc
+    #          - os: ubuntu-latest
+    #            toolchain: msvc
+    #          - os: ubuntu-latest
+    #            toolchain: gcc
+
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Vulkan
+        uses: humantree/setup-vulkan@v1
+        with:
+          vulkan-version: ${{ env.VULKAN_VER }}
+
+      # 1. 设置 xmake 环境 (使用最新版)
+      - name: Setup xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: latest
+      #          actions-cache-folder: '.xmake-cache'
+
+
+      - name: Install LLVM  (Linux Clang only)
+        if: matrix.os == 'ubuntu-latest' && matrix.toolchain == 'clang'
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh ${{ env.LLVM_VER }}
+          sudo apt-get install -y libc++-${{ env.LLVM_VER }}-dev libc++abi-${{ env.LLVM_VER }}-dev clang-tools-${{ env.LLVM_VER }} libunwind-${{ env.LLVM_VER }}-dev
+          echo "/usr/lib/llvm-${{ env.LLVM_VER }}/bin" >> $GITHUB_PATH
+
+      - name: Build ${{ matrix.mode }}
+        shell: bash
+        run: |
+          XMAKE_FLAGS="-m ${{ matrix.mode }} --toolchain=${{ matrix.toolchain }}"
+          EXTRA_FLAGS=""
+          PLAT_FLAGS=""
+          
+          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+             PLAT_FLAGS="-p linux"
+          else
+             PLAT_FLAGS="-p windows"
+          fi
+          
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" && "${{ matrix.toolchain }}" == "clang" ]]; then
+             clang --version
+             EXTRA_FLAGS="--sdk=/usr/lib/llvm-${{ env.LLVM_VER }} --cxflags='-stdlib=libc++' --ldflags='-stdlib=libc++'"
+          else
+             EXTRA_FLAGS=""
+          fi
+          
+          echo "Configuring with: $XMAKE_FLAGS $EXTRA_FLAGS"
+          xmake f -c $XMAKE_FLAGS $PLAT_FLAGS $EXTRA_FLAGS -y -cv
+          
+          xmake -b -y ${{ env.TARGET_NAME }}
+
+      - name: Test
+        run: xmake test
