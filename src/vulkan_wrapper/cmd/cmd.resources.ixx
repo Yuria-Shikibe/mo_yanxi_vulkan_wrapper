@@ -682,27 +682,27 @@ namespace mo_yanxi::vk::cmd{
 		VkDeviceSize offset = 0;
 		for(std::uint32_t i = 0; i < provided_levels - 1; ++i){
 			cmd::copy_buffer_to_image(
-				commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, std::initializer_list{
-					{
-						VkBufferImageCopy{
-							.bufferOffset = offset,
-							.bufferRowLength = 0,
-							.bufferImageHeight = 0,
-							.imageSubresource = {
-								.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-								.mipLevel = i,
-								.baseArrayLayer = baseLayer,
-								.layerCount = layerCount
-							},
-							.imageOffset = {
-								region.offset.x, region.offset.y, 0
-							},
-							.imageExtent = {
-								region.extent.width, region.extent.height, 1
-							}
+				commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				{
+					VkBufferImageCopy{
+						.bufferOffset = offset,
+						.bufferRowLength = 0,
+						.bufferImageHeight = 0,
+						.imageSubresource = {
+							.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+							.mipLevel = i,
+							.baseArrayLayer = baseLayer,
+							.layerCount = layerCount
+						},
+						.imageOffset = {
+							region.offset.x, region.offset.y, 0
+						},
+						.imageExtent = {
+							region.extent.width, region.extent.height, 1
 						}
 					}
-				});
+				}
+			);
 
 			offset += region.extent.width * region.extent.height * bpi;
 
@@ -715,27 +715,27 @@ namespace mo_yanxi::vk::cmd{
 		}
 
 		cmd::copy_buffer_to_image(
-			commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, std::initializer_list{
-				{
-					VkBufferImageCopy{
-						.bufferOffset = offset,
-						.bufferRowLength = 0,
-						.bufferImageHeight = 0,
-						.imageSubresource = {
-							.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-							.mipLevel = provided_levels - 1,
-							.baseArrayLayer = baseLayer,
-							.layerCount = layerCount
-						},
-						.imageOffset = {
-							region.offset.x, region.offset.y, 0
-						},
-						.imageExtent = {
-							region.extent.width, region.extent.height, 1
-						}
+			commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			{
+				VkBufferImageCopy{
+					.bufferOffset = offset,
+					.bufferRowLength = 0,
+					.bufferImageHeight = 0,
+					.imageSubresource = {
+						.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+						.mipLevel = provided_levels - 1,
+						.baseArrayLayer = baseLayer,
+						.layerCount = layerCount
+					},
+					.imageOffset = {
+						region.offset.x, region.offset.y, 0
+					},
+					.imageExtent = {
+						region.extent.width, region.extent.height, 1
 					}
 				}
-			});
+			}
+		);
 
 		if(provided_levels > 1)cmd::memory_barrier(
 			commandBuffer, image,
