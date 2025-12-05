@@ -56,7 +56,7 @@ target("mo_yanxi.vulkan_wrapper.test")
         set_runtimes("c++_shared")
     end
 
-    add_deps("mo_yanxi.vulkan_wrapper", {inherit = true})
+    add_deps("mo_yanxi.vulkan_wrapper")
     add_files("main.cpp")
 target_end()
 
