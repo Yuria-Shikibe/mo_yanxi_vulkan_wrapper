@@ -96,7 +96,7 @@ namespace mo_yanxi::vk::cmd{
 	}
 
 	export
-	template <contigious_range_of<VkBufferImageCopy> Rng>
+	template <contigious_range_of<VkBufferImageCopy> Rng = std::initializer_list<VkBufferImageCopy>>
 	void copy_buffer_to_image(
 		VkCommandBuffer command_buffer, VkBuffer src, VkImage dst, VkImageLayout expectedLayout, const Rng& rng){
 		::vkCmdCopyBufferToImage(command_buffer, src, dst, expectedLayout,
@@ -106,7 +106,7 @@ namespace mo_yanxi::vk::cmd{
 	}
 
 	export
-	template <contigious_range_of<VkBufferImageCopy> Rng>
+	template <contigious_range_of<VkBufferImageCopy> Rng = std::initializer_list<VkBufferImageCopy>>
 	void copy_image_to_buffer(
 		VkCommandBuffer command_buffer, VkImage src, VkBuffer dst, VkImageLayout expectedLayout, const Rng& rng){
 		::vkCmdCopyImageToBuffer(command_buffer, src, expectedLayout, dst,
@@ -116,28 +116,8 @@ namespace mo_yanxi::vk::cmd{
 	}
 
 	export
-	void copy_buffer_to_image(
-		VkCommandBuffer command_buffer, VkBuffer src, VkImage dst, VkImageLayout expectedLayout,
-		std::initializer_list<VkBufferImageCopy> rng){
-		::vkCmdCopyBufferToImage(command_buffer, src, dst, expectedLayout,
-		                         static_cast<std::uint32_t>(std::ranges::size(rng)),
-		                         std::ranges::cdata(rng)
-		);
-	}
-
-	export
-	void copy_image_to_buffer(
-		VkCommandBuffer command_buffer, VkImage src, VkBuffer dst, VkImageLayout expectedLayout,
-		std::initializer_list<VkBufferImageCopy> rng){
-		::vkCmdCopyImageToBuffer(command_buffer, src, expectedLayout, dst,
-		                         static_cast<std::uint32_t>(std::ranges::size(rng)),
-		                         std::ranges::cdata(rng)
-		);
-	}
-
-	export
 	template <contigious_range_of<VkBufferCopy> Rng = std::initializer_list<VkBufferCopy>>
-	void copy_buffer(VkCommandBuffer command_buffer, VkBuffer src, VkBuffer dst, Rng&& rng) noexcept{
+	void copy_buffer(VkCommandBuffer command_buffer, VkBuffer src, VkBuffer dst, const Rng& rng) noexcept{
 		::vkCmdCopyBuffer(
 			command_buffer, src, dst,
 			static_cast<std::uint32_t>(std::ranges::size(rng)),
@@ -681,8 +661,7 @@ namespace mo_yanxi::vk::cmd{
 
 		VkDeviceSize offset = 0;
 		for(std::uint32_t i = 0; i < provided_levels - 1; ++i){
-			VkBufferImageCopy cpy{
-
+			cmd::copy_buffer_to_image(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, std::initializer_list<VkBufferImageCopy>{{
 				.bufferOffset = offset,
 				.bufferRowLength = 0,
 				.bufferImageHeight = 0,
@@ -698,10 +677,7 @@ namespace mo_yanxi::vk::cmd{
 				.imageExtent = {
 					region.extent.width, region.extent.height, 1
 				}
-			};
-
-			cmd::copy_buffer_to_image(
-				commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, std::span{&cpy, 1});
+			}});
 
 			offset += region.extent.width * region.extent.height * bpi;
 
@@ -713,7 +689,7 @@ namespace mo_yanxi::vk::cmd{
 			if(region.extent.width == 0 || region.extent.height == 0) break;
 		}
 
-		VkBufferImageCopy cpy2{
+		cmd::copy_buffer_to_image(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, std::initializer_list<VkBufferImageCopy>{{
 			.bufferOffset = offset,
 			.bufferRowLength = 0,
 			.bufferImageHeight = 0,
@@ -729,11 +705,7 @@ namespace mo_yanxi::vk::cmd{
 			.imageExtent = {
 				region.extent.width, region.extent.height, 1
 			}
-		};
-		cmd::copy_buffer_to_image(
-			commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-				std::span{&cpy2, 1}
-			);
+		}});
 
 		if(provided_levels > 1)cmd::memory_barrier(
 			commandBuffer, image,
