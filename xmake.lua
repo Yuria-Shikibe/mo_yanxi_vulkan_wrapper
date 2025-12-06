@@ -13,15 +13,11 @@ else
     set_runtimes("c++_shared")
 end
 
-includes("**/config.lua");
-mo_yanxi_utility_import_default("mo_yanxi.utility")
-
+includes("external/**/xmake.lua");
 
 target("mo_yanxi.vulkan_wrapper")
     set_kind("static")
-
-
-    set_languages("c++latest")
+    set_languages("c++23")
     set_policy("build.c++.modules", true)
 
     set_warnings("all")
@@ -31,6 +27,7 @@ target("mo_yanxi.vulkan_wrapper")
         add_defines("MO_YANXI_VULKAN_WRAPPER_ENABLE_CHECK=1")
     else
         add_defines("MO_YANXI_VULKAN_WRAPPER_ENABLE_CHECK=0")
+        set_optimize("faster")
     end
 
     add_deps("mo_yanxi.utility")
