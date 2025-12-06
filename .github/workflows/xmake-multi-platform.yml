@@ -20,7 +20,7 @@ jobs:
       matrix:
         os: [
           windows-latest,
-          #          ubuntu-latest
+          ubuntu-latest
         ]
         toolchain: [ msvc, clang, gcc ]
         mode: [ debug, release ]
@@ -29,20 +29,17 @@ jobs:
             toolchain: msvc
           - os: windows-latest
             toolchain: clang
-
-          # 2. Linux: 使用 GCC/Clang
-        #          - os: ubuntu-latest
-        #            toolchain: gcc
-        #          - os: ubuntu-latest
-        #            toolchain: clang
+          # Linux 配置
+          - os: ubuntu-latest
+            toolchain: gcc
+          - os: ubuntu-latest
+            toolchain: clang
         exclude:
+          # Windows 通常不用 gcc (MinGW)，除非特意配置，这里保持你原有的排除
           - os: windows-latest
             toolchain: gcc
-    #          - os: ubuntu-latest
-    #            toolchain: msvc
-    #          - os: ubuntu-latest
-    #            toolchain: gcc
-
+          - os: ubuntu-latest
+            toolchain: msvc
 
     steps:
       - uses: actions/checkout@v4
@@ -56,22 +53,19 @@ jobs:
           vulkan-components: Vulkan-Headers, Vulkan-Loader
           vulkan-use-cache: true
 
-      # 1. 设置 xmake 环境 (使用最新版)
       - name: Setup xmake
         uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: latest
-#          actions-cache-folder: '.xmake-cache'
 
-
-      - name: Install LLVM  (Linux Clang only)
-        if: matrix.os == 'ubuntu-latest' && matrix.toolchain == 'clang'
-        run: |
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh ${{ env.LLVM_VER }}
-          sudo apt-get install -y libc++-${{ env.LLVM_VER }}-dev libc++abi-${{ env.LLVM_VER }}-dev clang-tools-${{ env.LLVM_VER }} libunwind-${{ env.LLVM_VER }}-dev
-          echo "/usr/lib/llvm-${{ env.LLVM_VER }}/bin" >> $GITHUB_PATH
+      # Modified: 使用统一的 Action 在 Windows 和 Linux 上安装 LLVM
+      - name: Install LLVM
+        if: matrix.toolchain == 'clang'
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "${{ env.LLVM_VER }}"
+          # Windows 上不需要缓存 libc++，Linux 上可能需要
+          cached: ${{ matrix.os == 'ubuntu-latest' }}
 
       - name: Build ${{ matrix.mode }}
         shell: bash
@@ -86,10 +80,14 @@ jobs:
              PLAT_FLAGS="-p windows"
           fi
           
+          # 检查 Clang 版本 (Debug用)
           if [ "${{ matrix.toolchain }}" == "clang" ]; then
             clang --version
           fi
           
+          # 针对 Linux Clang 的特殊配置 (libc++)
+          # Windows 上 Clang 通常使用 MSVC 的 STL，或者你需要手动配置 libc++ 但比较麻烦
+          # 这里保留你原有的 Linux 逻辑，Windows 下 EXTRA_FLAGS 为空即可自动使用 PATH 中的 clang
           if [[ "${{ matrix.os }}" == "ubuntu-latest" && "${{ matrix.toolchain }}" == "clang" ]]; then
              EXTRA_FLAGS="--sdk=/usr/lib/llvm-${{ env.LLVM_VER }} --cxflags='-stdlib=libc++' --ldflags='-stdlib=libc++'"
           else
