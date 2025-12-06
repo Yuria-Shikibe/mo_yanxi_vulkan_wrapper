@@ -3,8 +3,19 @@ add_rules("mode.debug", "mode.release")
 
 set_project("mo_yanxi.vulkan_wrapper")
 
+if is_plat("windows") then
+    if is_mode("debug") then
+        set_runtimes("MDd")
+    else
+        set_runtimes("MD")
+    end
+else
+    set_runtimes("c++_shared")
+end
+
 includes("**/config.lua");
 mo_yanxi_utility_import_default("mo_yanxi.utility")
+
 
 target("mo_yanxi.vulkan_wrapper")
     set_kind("static")
@@ -45,15 +56,6 @@ target("mo_yanxi.vulkan_wrapper.test")
     set_kind("binary")
     set_languages("c++latest")
 
-    if is_plat("windows") then
-        if is_mode("debug") then
-            set_runtimes("MDd")
-        else
-            set_runtimes("MD")
-        end
-    else
-        set_runtimes("c++_shared")
-    end
 
     add_deps("mo_yanxi.vulkan_wrapper")
     add_files("main.cpp")

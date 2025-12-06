@@ -2,11 +2,6 @@ module;
 
 #include <vulkan/vulkan.h>
 
-#ifdef __clang__
-#include <initializer_list>
-#endif
-
-
 export module mo_yanxi.vk.cmd:resources;
 
 import mo_yanxi.vk.util;

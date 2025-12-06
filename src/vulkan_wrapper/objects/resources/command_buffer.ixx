@@ -138,7 +138,7 @@ public:
 };
 
 export
-struct [[jetbrains::guard]] scoped_recorder{
+struct scoped_recorder{
 private:
 	VkCommandBuffer handler;
 

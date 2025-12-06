@@ -86,8 +86,11 @@ jobs:
              PLAT_FLAGS="-p windows"
           fi
           
+          if [ "${{ matrix.toolchain }}" == "clang" ]; then
+            clang --version
+          fi
+          
           if [[ "${{ matrix.os }}" == "ubuntu-latest" && "${{ matrix.toolchain }}" == "clang" ]]; then
-             clang --version
              EXTRA_FLAGS="--sdk=/usr/lib/llvm-${{ env.LLVM_VER }} --cxflags='-stdlib=libc++' --ldflags='-stdlib=libc++'"
           else
              EXTRA_FLAGS=""
