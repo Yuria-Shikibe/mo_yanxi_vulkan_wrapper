@@ -2,11 +2,16 @@ module;
 
 #include <vulkan/vulkan.h>
 
+#ifdef __clang__
+#include <initializer_list>
+#endif
+
+
 export module mo_yanxi.vk.cmd:resources;
 
-import std;
 import mo_yanxi.vk.util;
 import mo_yanxi.meta_programming;
+import std;
 
 namespace mo_yanxi::vk::cmd{
 	export
@@ -154,9 +159,9 @@ namespace mo_yanxi::vk::cmd{
 
 	export
 	struct dependency_gen{
-		std::vector<VkMemoryBarrier2> memory_barriers;
-		std::vector<VkBufferMemoryBarrier2> buffer_memory_barriers;
-		std::vector<VkImageMemoryBarrier2> image_memory_barriers;
+		std::vector<VkMemoryBarrier2> memory_barriers{};
+		std::vector<VkBufferMemoryBarrier2> buffer_memory_barriers{};
+		std::vector<VkImageMemoryBarrier2> image_memory_barriers{};
 
 		void swap_stages(){
 			cmd::swap_stage(memory_barriers);
