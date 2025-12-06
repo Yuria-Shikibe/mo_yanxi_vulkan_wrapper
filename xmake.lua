@@ -1,6 +1,6 @@
+includes("external/**/xmake.lua");
 
 add_rules("mode.debug", "mode.release")
-
 set_project("mo_yanxi.vulkan_wrapper")
 
 if is_plat("windows") then
@@ -12,8 +12,6 @@ if is_plat("windows") then
 else
     set_runtimes("c++_shared")
 end
-
-includes("external/**/xmake.lua");
 
 target("mo_yanxi.vulkan_wrapper")
     set_kind("static")
@@ -27,7 +25,6 @@ target("mo_yanxi.vulkan_wrapper")
         add_defines("MO_YANXI_VULKAN_WRAPPER_ENABLE_CHECK=1")
     else
         add_defines("MO_YANXI_VULKAN_WRAPPER_ENABLE_CHECK=0")
-        set_optimize("faster")
     end
 
     add_deps("mo_yanxi.utility")
@@ -44,6 +41,7 @@ target("mo_yanxi.vulkan_wrapper")
     add_includedirs(path.join(vulkan_sdk, "Include"), {public = true})
     add_linkdirs(path.join(vulkan_sdk, "Lib"), {public = true})
     add_links("vulkan-1", {public = true})
+    add_links("shaderc_shared", {public = true})
     add_defines("VK_USE_64_BIT_PTR_DEFINES=1", {public = true})
 target_end()
 
@@ -53,9 +51,6 @@ target("mo_yanxi.vulkan_wrapper.test")
     set_kind("binary")
     set_languages("c++latest")
 
-
     add_deps("mo_yanxi.vulkan_wrapper")
     add_files("main.cpp")
 target_end()
-
-includes("./external/mo_yanxi_utility/xmake2cmake.lua")
