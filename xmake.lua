@@ -41,7 +41,12 @@ target("mo_yanxi.vulkan_wrapper")
     add_includedirs(path.join(vulkan_sdk, "Include"), {public = true})
     add_linkdirs(path.join(vulkan_sdk, "Lib"), {public = true})
     add_links("vulkan-1", {public = true})
-    add_links("shaderc_shared", {public = true})
+    if is_mode("debug") then
+        add_links("shaderc_sharedd", {public = true})
+    else
+        add_links("shaderc_shared", {public = true})
+    end
+
     add_defines("VK_USE_64_BIT_PTR_DEFINES=1", {public = true})
 target_end()
 
