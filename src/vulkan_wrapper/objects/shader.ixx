@@ -13,31 +13,21 @@ export namespace mo_yanxi::vk{
 	struct shader_module : exclusive_handle<VkShaderModule>{
 	private:
 		exclusive_handle_member<VkDevice> device{};
-		VkShaderStageFlagBits declStage{};
 		std::vector<std::uint32_t> binary{};
 		std::string name{};
 
 	public:
-		static constexpr std::array ShaderType{
-			std::pair{std::string_view{".vert"}, VK_SHADER_STAGE_VERTEX_BIT},
-			std::pair{std::string_view{".frag"}, VK_SHADER_STAGE_FRAGMENT_BIT},
-			std::pair{std::string_view{".geom"}, VK_SHADER_STAGE_GEOMETRY_BIT},
-			std::pair{std::string_view{".tesc"}, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT},
-			std::pair{std::string_view{".tese"}, VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT},
-			std::pair{std::string_view{".comp"}, VK_SHADER_STAGE_COMPUTE_BIT},
-			std::pair{std::string_view{".mesh"}, VK_SHADER_STAGE_MESH_BIT_EXT},
-		};
-
-		[[nodiscard]] shader_module(VkDevice device, const std::span<const char> code, VkShaderStageFlagBits stageFlagBits = {}) : device(device), declStage(stageFlagBits){
+		template <typename T>
+			requires (std::is_trivially_copyable_v<T>)
+		[[nodiscard]] shader_module(VkDevice device, const std::span<const T> code) : device(device){
 			createShaderModule(code);
 		}
 
-		[[nodiscard]] shader_module(VkDevice device, const std::filesystem::path& path, VkShaderStageFlagBits stageFlagBits = {}) : device(device), name(path.stem().string()), declStage(stageFlagBits){
+		[[nodiscard]] shader_module(VkDevice device, const std::filesystem::path& path) : device(device), name(path.stem().string()){
 			createShaderModule(path);
-			declShaderStage(path);
 		}
 
-		[[nodiscard]] shader_module(VkDevice device, const std::string_view path, VkShaderStageFlagBits stageFlagBits = {}) : shader_module(device, std::filesystem::path{path}, stageFlagBits){
+		[[nodiscard]] shader_module(VkDevice device, const std::string_view path) : shader_module(device, std::filesystem::path{path}){
 
 		}
 
@@ -52,22 +42,11 @@ export namespace mo_yanxi::vk{
 		}
 
 		VkPipelineShaderStageCreateInfo get_create_info(
-			VkShaderStageFlagBits stage = VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM,
+			VkShaderStageFlagBits stage,
 			const std::string_view entry = "main",
 			const VkSpecializationInfo* specializationInfo = nullptr
 			) const{
 
-			if(declStage){
-				if(stage == VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM){
-					stage = declStage;
-				}else if(declStage != stage){
-					throw vk_error(VK_ERROR_FEATURE_NOT_PRESENT, "Shader State Mismatch!");
-				}
-			}else{
-				if(stage == VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM){
-					throw vk_error(VK_ERROR_FEATURE_NOT_PRESENT, "Shader Stage must be explicit specified!");
-				}
-			}
 
 			const VkPipelineShaderStageCreateInfo vertShaderStageInfo{
 				.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -99,32 +78,25 @@ export namespace mo_yanxi::vk{
 
 			this->device = device;
 			createShaderModule(path);
-			declShaderStage(path);
 		}
 
-		void declShaderStage(const std::filesystem::path& path){
-			if(declStage)return;
-			const auto fileName = path.filename().string();
-
-			for (const auto & [type, stage] : ShaderType){
-				if(fileName.contains(type)){
-					declStage = stage;
-					break;
-				}
-			}
-		}
 
 		template <std::ranges::contiguous_range Rng>
 		void createShaderModule(const Rng& code){
+			auto spn = std::span{code.begin(), code.end()};
+			std::span<const std::byte> bspan = std::as_bytes(spn);
+			auto sz = bspan.size();
+			auto u32sz = (sz + (sizeof(std::uint32_t) -1)) / sizeof(std::uint32_t);
+			binary.resize(u32sz);
+			std::memcpy(binary.data(), bspan.data(), bspan.size());
+
 			VkShaderModuleCreateInfo createInfo{VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
-			createInfo.codeSize = std::ranges::size(code) * sizeof(std::ranges::range_value_t<Rng>);
-			createInfo.pCode = reinterpret_cast<const std::uint32_t*>(std::ranges::data(code));
+			createInfo.codeSize = bspan.size();
+			createInfo.pCode = std::ranges::data(binary);
 
 			if(auto rst = vkCreateShaderModule(device, &createInfo, nullptr, &handle)){
 				throw vk_error(rst, "Failed to create shader module!");
 			}
-
-			binary = std::vector<std::uint32_t>{std::from_range, code};
 		}
 
 		void createShaderModule(const std::filesystem::path& file){
@@ -140,23 +112,19 @@ export namespace mo_yanxi::vk{
 			return binary;
 		}
 
-		void set_no_deduced_stage() noexcept{
-			declStage = {};
-		}
-
-		void set_stage(VkShaderStageFlagBits stage) noexcept{
-			declStage = stage;
-		}
 	};
 
 	struct shader_chain{
 		std::vector<VkPipelineShaderStageCreateInfo> chain{};
 
-		void push(const std::initializer_list<const shader_module*> args){
+		void push(
+			const std::initializer_list<const shader_module*> args,
+			const std::initializer_list<VkShaderStageFlagBits> stage
+			){
 			chain.reserve(chain.size() + args.size());
 
-			for (const auto & arg : args){
-				chain.push_back(arg->get_create_info());
+			for (const auto & [arg, stg] : std::views::zip(args, stage)){
+				chain.push_back(arg->get_create_info(stg));
 			}
 		}
 
@@ -171,8 +139,10 @@ export namespace mo_yanxi::vk{
 		[[nodiscard]] shader_chain() = default;
 
 		[[nodiscard]] explicit(false) shader_chain(
-			const std::initializer_list<const shader_module*> args){
-			push(args);
+			const std::initializer_list<const shader_module*> args,
+			const std::initializer_list<VkShaderStageFlagBits> stage
+			){
+			push(args, stage);
 		}
 
 		template <typename ...T>
