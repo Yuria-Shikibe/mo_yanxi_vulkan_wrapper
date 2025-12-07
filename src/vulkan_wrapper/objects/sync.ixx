@@ -18,7 +18,7 @@ namespace mo_yanxi::vk{
 	public:
 		[[nodiscard]] fence() = default;
 
-		[[nodiscard]] explicit fence(VkDevice device, const bool create_signal) : device{device}{
+		[[nodiscard]] fence(VkDevice device, const bool create_signal) : device{device}{
 			const VkFenceCreateInfo fenceInfo{
 					.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
 					.pNext = nullptr,
