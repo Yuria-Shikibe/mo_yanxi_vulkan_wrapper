@@ -52,15 +52,15 @@ namespace mo_yanxi::vk{
 	}
 
 	export
-	struct buffer_borrow{
+	struct buffer_range{
 		VkBuffer buffer;
 		VkDeviceAddress address;
 		VkDeviceSize offset;
 		VkDeviceSize size;
 
-		[[nodiscard]] constexpr buffer_borrow sub_range(VkDeviceSize off, VkDeviceSize size) const noexcept{
+		[[nodiscard]] constexpr buffer_range sub_range(VkDeviceSize off, VkDeviceSize size) const noexcept{
 			assert(off + size <= this->size);
-			return buffer_borrow{buffer, address + offset + off, size};
+			return buffer_range{buffer, address + offset + off, size};
 		}
 
 		[[nodiscard]] constexpr VkDeviceAddress begin() const noexcept{
@@ -117,20 +117,19 @@ namespace mo_yanxi::vk{
 			return vkGetBufferDeviceAddress(get_device(), &bufferDeviceAddressInfo);
 		}
 
-		buffer_borrow borrow(VkDeviceSize off, VkDeviceSize size) const noexcept{
+		buffer_range borrow(VkDeviceSize off, VkDeviceSize size) const noexcept{
 			assert(off + size < get_size());
-			return buffer_borrow{*this, get_address(), off, size};
+			return buffer_range{*this, get_address(), off, size};
 		}
 
-		buffer_borrow borrow_after(VkDeviceSize off) const noexcept{
+		buffer_range borrow_after(VkDeviceSize off) const noexcept{
 			assert(off < get_size());
-			return buffer_borrow{*this, get_address(), off, get_size() - off};
+			return buffer_range{*this, get_address(), off, get_size() - off};
 		}
 
-		buffer_borrow borrow() const noexcept{
-			return buffer_borrow{*this, get_address(), 0, get_size()};
+		buffer_range borrow() const noexcept{
+			return buffer_range{*this, get_address(), 0, get_size()};
 		}
-
 	};
 
 	export struct buffer_cpu_to_gpu : buffer{
@@ -189,7 +188,6 @@ namespace mo_yanxi::vk{
 			this->operator=(storage_buffer{get_allocator(), size, usage});
 		}
 	};
-
 
 	export
 	template <std::derived_from<buffer> Bty>
@@ -281,7 +279,6 @@ namespace mo_yanxi::vk{
 		buffer_mapper& operator=(buffer_mapper&& other) noexcept = default;
 	};
 
-	// export struct buffer :
 	export struct image : resource_base<VkImage>{
 		static constexpr VkImageSubresourceRange default_image_subrange{
 			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,

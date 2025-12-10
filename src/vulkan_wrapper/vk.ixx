@@ -15,6 +15,7 @@ export import :pipeline_layout;
 
 export import :command_buffer;
 export import :resources;
+export import :aliasing;
 export import :image_derives;
 export import :descriptor_buffer;
 export import :uniform_buffer;

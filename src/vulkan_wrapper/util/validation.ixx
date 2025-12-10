@@ -9,7 +9,7 @@ import mo_yanxi.handle_wrapper;
 import std;
 
 namespace mo_yanxi::vk{
-	export inline bool enable_validation_layers{MO_YANXI_VULKAN_WRAPPER_ENABLE_CHECK};
+	export inline bool enable_validation_layers{false};
 
 	export constexpr std::array used_validation_layers{
 		(const char*)"VK_LAYER_KHRONOS_validation",
