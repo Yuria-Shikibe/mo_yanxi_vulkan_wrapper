@@ -351,8 +351,10 @@ private:
 	VkCommandPool pool{};
 
 public:
-	using unit_allocator_type = std::allocator_traits<Alloc>::template rebind_alloc<unit>;
-	using buffer_allocator_type = std::allocator_traits<Alloc>::template rebind_alloc<VkCommandBuffer>;
+	using allocator_type = Alloc;
+
+	using unit_allocator_type = std::allocator_traits<allocator_type>::template rebind_alloc<unit>;
+	using buffer_allocator_type = std::allocator_traits<allocator_type>::template rebind_alloc<VkCommandBuffer>;
 
 private:
 	std::vector<VkCommandBuffer, buffer_allocator_type> command_buffers{};
@@ -470,6 +472,20 @@ public:
 	[[nodiscard]] VkCommandPool get_pool() const noexcept{
 		return pool;
 	}
+
+
+	std::vector<VkSemaphoreSubmitInfo, typename std::allocator_traits<allocator_type>::template rebind_alloc<VkSemaphoreSubmitInfo>> get_waiting_semaphores(VkPipelineStageFlags2 stageFlags2) const {
+		std::vector<VkSemaphoreSubmitInfo, typename std::allocator_traits<allocator_type>::template rebind_alloc<VkSemaphoreSubmitInfo>> rst{units.size(), units.get_allocator()};
+		for (const auto & [idx, u] : units | std::views::enumerate){
+			rst[idx] = VkSemaphoreSubmitInfo{
+				.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+				.semaphore = u.get_semaphore(),
+				.value = u.counting,
+				.stageMask = stageFlags2,
+			};
+		}
+		return rst;
+	}
 };
 
 export
@@ -570,6 +586,7 @@ public:
     [[nodiscard]] VkCommandPool get_pool() const noexcept {
         return pool;
     }
+
 };
 
 struct command_pool : exclusive_handle<VkCommandPool>{
