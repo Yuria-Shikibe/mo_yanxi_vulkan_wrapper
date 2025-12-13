@@ -67,7 +67,7 @@ target_end()
 target("mo_yanxi.vulkan_wrapper.test")
     set_extension(".exe")
     set_kind("binary")
-    set_languages("c++latest")
+    set_languages("c++23")
 
     add_deps("mo_yanxi.vulkan_wrapper")
     add_files("main.cpp")

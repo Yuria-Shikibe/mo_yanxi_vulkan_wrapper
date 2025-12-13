@@ -9,8 +9,7 @@ import std;
 namespace mo_yanxi::vk{
 export inline std::add_pointer_t<decltype(vkGetPhysicalDeviceProperties2KHR)> getPhysicalDeviceProperties2KHR = nullptr;
 export inline std::add_pointer_t<decltype(vkGetDescriptorSetLayoutSizeEXT)> getDescriptorSetLayoutSizeEXT = nullptr;
-export inline std::add_pointer_t<decltype(vkGetDescriptorSetLayoutBindingOffsetEXT)>
-getDescriptorSetLayoutBindingOffsetEXT = nullptr;
+std::add_pointer_t<decltype(vkGetDescriptorSetLayoutBindingOffsetEXT)> _PFNgetDescriptorSetLayoutBindingOffsetEXT = nullptr;
 
 std::add_pointer_t<decltype(vkGetDescriptorEXT)> getDescriptorEXT_ = nullptr;
 std::add_pointer_t<decltype(vkCmdDrawMeshTasksEXT)> drawMeshTasksEXT = nullptr;
@@ -24,6 +23,15 @@ std::add_pointer_t<decltype(vkCmdSetDescriptorBufferOffsets2EXT)> PFN_cmdSetDesc
 
 std::add_pointer_t<decltype(vkCmdSetColorBlendEnableEXT)> _PFN_vkCmdSetColorBlendEnableEXT = nullptr;
 std::add_pointer_t<decltype(vkCmdSetColorBlendEquationEXT)> _PFN_vkCmdSetColorBlendEquationEXT = nullptr;
+
+export void getDescriptorSetLayoutBindingOffsetEXT(
+	VkDevice
+	device,
+	VkDescriptorSetLayout                       layout,
+	uint32_t                                    binding,
+	VkDeviceSize*                               pOffset){
+	_PFNgetDescriptorSetLayoutBindingOffsetEXT(device, layout, binding, pOffset);
+}
 
 export void getDescriptorEXT(
 	VkDevice device,
@@ -249,7 +257,7 @@ void set_descriptor_offsets(
 export void load_ext(VkInstance instance){
 	getPhysicalDeviceProperties2KHR = LoadFuncPtr(instance, vkGetPhysicalDeviceProperties2KHR);
 	getDescriptorSetLayoutSizeEXT = LoadFuncPtr(instance, vkGetDescriptorSetLayoutSizeEXT);
-	getDescriptorSetLayoutBindingOffsetEXT = LoadFuncPtr(instance, vkGetDescriptorSetLayoutBindingOffsetEXT);
+	_PFNgetDescriptorSetLayoutBindingOffsetEXT = LoadFuncPtr(instance, vkGetDescriptorSetLayoutBindingOffsetEXT);
 	getDescriptorEXT_ = LoadFuncPtr(instance, vkGetDescriptorEXT);
 
 	drawMeshTasksEXT = LoadFuncPtr(instance, vkCmdDrawMeshTasksEXT);

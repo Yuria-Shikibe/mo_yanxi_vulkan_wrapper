@@ -65,6 +65,7 @@ namespace mo_yanxi::vk {
 		void init_base(VkPhysicalDevice pd, VkDevice device, VkDescriptorSetLayout layout, std::uint32_t binding_count) {
 			properties.init(pd);
 			offsets.resize(binding_count);
+
 			for (auto&& [i, offset] : offsets | std::views::enumerate) {
 				getDescriptorSetLayoutBindingOffsetEXT(device, layout, static_cast<std::uint32_t>(i), offsets.data() + i);
 			}
@@ -231,14 +232,15 @@ namespace mo_yanxi::vk {
 		// 内部辅助：计算布局需求 (被构造函数和 reconfigure 复用)
 		// 注意：调用此函数前，必须确保 this->offsets 已经根据当前的 layout 更新完毕
 		// ---------------------------------------------------------------------
-		[[nodiscard]] std::pair<VkDeviceSize, std::vector<runtime_binding_info>> calc_requirements(
+		template <std::ranges::input_range Rng>
+		[[nodiscard]] VkDeviceSize calc_requirements(
 			std::uint32_t max_binding_index,
-			std::initializer_list<binding_spec> specs
-		) const {
-			std::vector<runtime_binding_info> new_bindings_info(max_binding_index);
+			const Rng& specs
+		) {
+			bindings_info.resize(max_binding_index);
 			VkDeviceSize max_required_size = 0;
 
-			for (const auto& spec : specs) {
+			for (const binding_spec& spec : specs) {
 				assert(spec.binding < max_binding_index);
 
 				std::size_t current_stride = 0;
@@ -253,7 +255,7 @@ namespace mo_yanxi::vk {
 				default: throw std::runtime_error("Unsupported variable descriptor type");
 				}
 
-				new_bindings_info[spec.binding] = runtime_binding_info{
+				bindings_info[spec.binding] = runtime_binding_info{
 					.stride = current_stride,
 					.capacity = spec.count
 				};
@@ -269,7 +271,7 @@ namespace mo_yanxi::vk {
 
 			if (max_required_size == 0) max_required_size = 1024;
 
-			return { max_required_size, std::move(new_bindings_info) };
+			return max_required_size;
 		}
 
 	public:
@@ -288,8 +290,7 @@ namespace mo_yanxi::vk {
 			init_base(physical_device, device, layout, max_binding_index);
 
 			// 2. 计算需求
-			auto [required_size, info] = calc_requirements(max_binding_index, specs);
-			bindings_info = std::move(info);
+			auto required_size = calc_requirements(max_binding_index, specs);
 
 			// 3. 分配内存
 			this->buffer::operator=(buffer{ allocator, {
@@ -304,13 +305,14 @@ namespace mo_yanxi::vk {
 		// ---------------------------------------------------------------------
 		// 重新配置函数 (复用逻辑，条件分配)
 		// ---------------------------------------------------------------------
+		template <std::ranges::input_range Rng = std::initializer_list<binding_spec>>
 		void reconfigure(
-			const allocator_usage allocator,
 			VkDescriptorSetLayout layout,
 			std::uint32_t max_binding_index,
-			std::initializer_list<binding_spec> specs
+			const Rng& specs
 		) {
-			const auto device = allocator.get_device();
+
+			const auto device = get_allocator().get_device();
 
 			// 1. 根据新 Layout 更新 Offset 信息
 			// descriptor_buffer_base::offsets 是 protected 的，可以直接修改
@@ -319,14 +321,8 @@ namespace mo_yanxi::vk {
 				getDescriptorSetLayoutBindingOffsetEXT(device, layout, static_cast<std::uint32_t>(i), offsets.data() + i);
 			}
 
-			// 2. 计算新需求 (复用逻辑)
-			auto [required_size, new_info] = calc_requirements(max_binding_index, specs);
-
-			// 3. 检查当前 Buffer 容量是否足够
-			// 只有在需要更大空间时才重新分配
-			if (required_size > this->get_size()) {
-				// 使用 buffer 类的移动赋值运算符覆盖当前对象，这会自动释放旧资源
-				this->buffer::operator=(buffer{ allocator, {
+			if (auto required_size = this->calc_requirements(max_binding_index, specs); required_size > this->get_size()) {
+				this->buffer::operator=(buffer{ get_allocator(), {
 					.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 					.size = required_size,
 					.usage = VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
@@ -334,10 +330,6 @@ namespace mo_yanxi::vk {
 					.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 				} });
 			}
-			// else: 如果 required_size <= this->get_size()，则直接复用现有内存
-
-			// 4. 更新内部元数据
-			bindings_info = std::move(new_info);
 		}
 
 		void bind_to(
@@ -655,6 +647,75 @@ namespace mo_yanxi::vk {
 				imageInfo,
 				type
 			);
+			return *this;
+		}
+
+		template <std::ranges::input_range Rng>
+			requires (std::convertible_to<std::ranges::range_const_reference_t<Rng>, const VkDescriptorImageInfo&>)
+		const dynamic_descriptor_mapper& set_images_at(
+			std::uint32_t binding,
+			std::size_t startIndex,
+			const Rng& imageInfos,
+			VkDescriptorType type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+		) const {
+			auto* buf = buffer_obj.get();
+			VkDeviceSize stride = buf->get_binding_stride(binding);
+
+			// 获取起始位置指针
+			std::byte* current_ptr = get_ptr(binding, startIndex);
+
+			for (const VkDescriptorImageInfo& imageInfo : imageInfos) {
+				descriptor_write_helper::write_image(
+					buf->get_device(),
+					current_ptr,
+					buf,
+					imageInfo,
+					type
+				);
+				// 动态 Buffer 中，下一个元素的地址 = 当前地址 + Binding Stride
+				current_ptr += stride;
+			}
+			return *this;
+		}
+
+		// 2. 传入 VkImageView 的 Range (共享 Layout 和 Sampler)
+		template <std::ranges::input_range Rng>
+			requires (std::convertible_to<std::ranges::range_const_reference_t<Rng>, VkImageView>)
+		const dynamic_descriptor_mapper& set_images_at(
+			std::uint32_t binding,
+			std::size_t startIndex,
+			const VkImageLayout layout,
+			VkSampler sampler,
+			const Rng& imageViews,
+			const VkDescriptorType type = VK_DESCRIPTOR_TYPE_MAX_ENUM
+		) const {
+			// 自动推导类型
+			VkDescriptorType realType = (type == VK_DESCRIPTOR_TYPE_MAX_ENUM) ?
+				(sampler ? VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE) : type;
+
+			auto* buf = buffer_obj.get();
+			VkDeviceSize stride = buf->get_binding_stride(binding);
+
+			// 获取起始位置指针
+			std::byte* current_ptr = get_ptr(binding, startIndex);
+
+			for (VkImageView imageView : imageViews) {
+				VkDescriptorImageInfo image_info{
+					.sampler = sampler,
+					.imageView = imageView,
+					.imageLayout = layout
+				};
+
+				descriptor_write_helper::write_image(
+					buf->get_device(),
+					current_ptr,
+					buf,
+					image_info,
+					realType
+				);
+
+				current_ptr += stride;
+			}
 			return *this;
 		}
 	};
