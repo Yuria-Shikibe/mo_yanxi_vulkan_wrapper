@@ -301,7 +301,7 @@ public:
 	[[nodiscard]] color_attachment() = default;
 
 	[[nodiscard]] color_attachment(
-		allocator& allocator,
+		const allocator_usage& allocator,
 		const VkExtent2D extent,
 		VkImageUsageFlags usage,
 		VkFormat format = VK_FORMAT_R8G8B8A8_UNORM,

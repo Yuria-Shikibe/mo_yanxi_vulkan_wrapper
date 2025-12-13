@@ -24,7 +24,7 @@ void mo_yanxi::print_stack_trace(std::ostream& ss, unsigned skip, const std::sta
 		descView.remove_suffix(descView.size() - end);
 #endif
 
-		std::print(ss, "[{:_>3}] {}({})\n\t", i, stacktrace.source_file(), stacktrace.source_line() - 1);
+		std::print(ss, "[{:_>3}] {}({})\n\t", i, stacktrace.source_file(), stacktrace.source_line());
 		std::print(ss, "{}", descView);
 
 		// if(auto rst2 = algo::unwrap(descView, '`'); rst2.is_flat()){
