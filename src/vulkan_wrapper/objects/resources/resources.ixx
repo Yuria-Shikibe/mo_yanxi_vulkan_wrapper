@@ -90,7 +90,7 @@ namespace mo_yanxi::vk{
 			const VmaAllocationCreateInfo& alloc_create_info
 		)
 			: resource_base(allocator){
-			create(create_info, alloc_create_info);
+			if(create_info.size)create(create_info, alloc_create_info);
 		}
 
 		[[nodiscard]] constexpr VkDeviceSize get_size() const noexcept{

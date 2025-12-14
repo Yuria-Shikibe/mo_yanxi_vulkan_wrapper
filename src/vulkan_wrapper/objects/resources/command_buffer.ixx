@@ -13,11 +13,14 @@ namespace cmd{
 export void begin(
 	VkCommandBuffer buffer,
 	const VkCommandBufferUsageFlags flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-	const VkCommandBufferInheritanceInfo& inheritance = {}){
+	const VkCommandBufferInheritanceRenderingInfo& inheritance = {}){
 	VkCommandBufferBeginInfo beginInfo{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
 
 	beginInfo.flags = flags;
-	beginInfo.pInheritanceInfo = &inheritance; // Optional
+	const VkCommandBufferInheritanceInfo info{VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO, &inheritance};
+	if(inheritance.sType == VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_RENDERING_INFO){
+		beginInfo.pInheritanceInfo = &info;
+	}
 
 	if(const auto rst = vkBeginCommandBuffer(buffer, &beginInfo)){
 		throw vk_error(rst, "Failed to begin recording command buffer!");
@@ -106,7 +109,7 @@ public:
 
 	void begin(
 		const VkCommandBufferUsageFlags flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-		const VkCommandBufferInheritanceInfo& inheritance = {}) const{
+		const VkCommandBufferInheritanceRenderingInfo& inheritance = {}) const{
 		cmd::begin(get(), flags, inheritance);
 	}
 
@@ -146,7 +149,7 @@ public:
 	[[nodiscard]] explicit(false) scoped_recorder(VkCommandBuffer handler,
 		const VkCommandBufferUsageFlags flags =
 			VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-		const VkCommandBufferInheritanceInfo& inheritance = {})
+		const VkCommandBufferInheritanceRenderingInfo& inheritance = {})
 	: handler{handler}{
 		cmd::begin(handler, flags, inheritance);
 	}
@@ -585,6 +588,23 @@ public:
 
     [[nodiscard]] VkCommandPool get_pool() const noexcept {
         return pool;
+    }
+
+	void reset(std::size_t size, VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY){
+	    free();
+		if(buffers.size() == size)return;
+    	buffers.resize(size);
+    	const VkCommandBufferAllocateInfo allocInfo{
+    		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+			.pNext = nullptr,
+			.commandPool = pool,
+			.level = level,
+			.commandBufferCount = static_cast<std::uint32_t>(size)
+		};
+
+    	if (const auto rst = ::vkAllocateCommandBuffers(device, &allocInfo, buffers.data())) {
+    		throw vk_error(rst, "Failed to allocate command sequence!");
+    	}
     }
 
 };

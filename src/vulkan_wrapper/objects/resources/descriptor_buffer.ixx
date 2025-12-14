@@ -617,7 +617,7 @@ namespace mo_yanxi::vk {
 			std::size_t arrayIndex,
 			VkDeviceAddress addr,
 			VkDeviceSize size,
-			VkDescriptorType type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+			VkDescriptorType type
 		) const {
 			// 推断大小
 			std::size_t desc_size = (type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) ?
