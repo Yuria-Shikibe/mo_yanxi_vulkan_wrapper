@@ -86,6 +86,10 @@ namespace mo_yanxi::vk{
 			});
 		}
 
+		std::span<VkRenderingAttachmentInfo> get_color_attachment_infos() noexcept{
+			return colorAttachmentsInfo;
+		}
+
 		void begin_rendering(VkCommandBuffer commandBuffer, const VkRect2D& area, VkRenderingFlags flags = 0) const{
 			const VkRenderingInfo info{
 				.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
@@ -102,6 +106,7 @@ namespace mo_yanxi::vk{
 
 			vkCmdBeginRendering(commandBuffer, &info);
 		}
+
 
 		void begin_rendering(
 			VkCommandBuffer commandBuffer,
