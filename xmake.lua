@@ -5,8 +5,6 @@ includes("external/**/xmake.lua");
 add_rules("mode.debug", "mode.release")
 set_project("mo_yanxi.vulkan_wrapper")
 
-add_requires("spirv-cross")
-
 if is_plat("windows") then
     if is_mode("debug") then
         set_runtimes("MDd")
@@ -41,13 +39,6 @@ function mo_yanxi_vulkan_wrapper_use_vulkan()
     add_includedirs(path.join(vulkan_sdk, "Include"), {public = true})
     add_linkdirs(path.join(vulkan_sdk, "Lib"), {public = true})
     add_links("vulkan-1", {public = true})
-    add_packages("spirv-cross", {public = true})
-
-    if is_mode("debug") then
-        add_links("shaderc_sharedd", {public = true})
-    else
-        add_links("shaderc_shared", {public = true})
-    end
 
     add_defines("VK_USE_64_BIT_PTR_DEFINES=1", {public = true})
 end

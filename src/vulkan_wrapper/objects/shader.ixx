@@ -61,6 +61,14 @@ export namespace mo_yanxi::vk{
 			return vertShaderStageInfo;
 		}
 
+		VkPipelineShaderStageCreateInfo get_create_info_compute(
+			const VkSpecializationInfo* specializationInfo = nullptr,
+			const std::string_view entry = "main"
+			) const{
+
+			return get_create_info(VK_SHADER_STAGE_COMPUTE_BIT, entry, specializationInfo);
+		}
+
 
 		~shader_module(){
 			if(device)vkDestroyShaderModule(device, handle, nullptr);
