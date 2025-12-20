@@ -319,6 +319,7 @@ public:
 	}
 
 	[[nodiscard]] void* map() const{
+		if(!allocation)return nullptr;
 		assert(allocator);
 		void* mapped;
 		if(auto rst = vmaMapMemory(allocator, allocation, &mapped)){

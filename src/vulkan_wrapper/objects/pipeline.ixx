@@ -167,9 +167,10 @@ namespace mo_yanxi::vk{
 		std::vector<color_attachment_info> color_attachments{};
 
 	public:
-		void set_blending_dynamic(){
-			dynamicStates.push_back(VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT);
-			dynamicStates.push_back(VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT);
+		void set_blending_dynamic(bool enable_equation, bool enable_write_mask){
+			if(enable_equation || enable_write_mask)dynamicStates.push_back(VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT);
+			if(enable_equation)dynamicStates.push_back(VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT);
+			if(enable_write_mask)dynamicStates.push_back(VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT);
 		}
 
 		graphic_pipeline_template& set_multisample(

@@ -26,6 +26,19 @@ export void begin(
 		throw vk_error(rst, "Failed to begin recording command buffer!");
 	}
 }
+export void begin_with_inheritance_info(
+	VkCommandBuffer buffer,
+	const VkCommandBufferUsageFlags flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT){
+	VkCommandBufferBeginInfo beginInfo{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+
+	beginInfo.flags = flags;
+	constexpr VkCommandBufferInheritanceInfo info{VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO};
+	beginInfo.pInheritanceInfo = &info;
+
+	if(const auto rst = vkBeginCommandBuffer(buffer, &beginInfo)){
+		throw vk_error(rst, "Failed to begin recording command buffer!");
+	}
+}
 
 export void end(VkCommandBuffer buffer){
 	if(const auto rst = vkEndCommandBuffer(buffer)){
@@ -152,6 +165,17 @@ public:
 		const VkCommandBufferInheritanceRenderingInfo& inheritance = {})
 	: handler{handler}{
 		cmd::begin(handler, flags, inheritance);
+	}
+	[[nodiscard]] explicit(false) scoped_recorder(VkCommandBuffer handler,
+		const VkCommandBufferUsageFlags flags,
+		bool enable_secondary_only)
+	: handler{handler}{
+		if(enable_secondary_only){
+			cmd::begin_with_inheritance_info(handler, flags);
+		}else{
+			cmd::begin(handler, flags);
+		}
+
 	}
 
 	~scoped_recorder(){

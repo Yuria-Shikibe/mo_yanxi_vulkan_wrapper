@@ -151,6 +151,8 @@ namespace mo_yanxi::vk {
 	public:
 		using descriptor_buffer_base::descriptor_buffer_base;
 
+		[[nodiscard]] descriptor_buffer() = default;
+
 		[[nodiscard]] descriptor_buffer(
 			const allocator_usage allocator,
 			VkDescriptorSetLayout layout,
@@ -277,11 +279,12 @@ namespace mo_yanxi::vk {
 	public:
 		[[nodiscard]] dynamic_descriptor_buffer() = default;
 
+		template <std::ranges::input_range Rng = std::initializer_list<binding_spec>>
 		[[nodiscard]] dynamic_descriptor_buffer(
 			const allocator_usage allocator,
 			VkDescriptorSetLayout layout,
 			std::uint32_t max_binding_index,
-			std::initializer_list<binding_spec> specs
+			const Rng& specs
 		) {
 			const auto device = allocator.get_device();
 			const auto physical_device = allocator.get_physical_device();
@@ -290,7 +293,7 @@ namespace mo_yanxi::vk {
 			init_base(physical_device, device, layout, max_binding_index);
 
 			// 2. 计算需求
-			auto required_size = calc_requirements(max_binding_index, specs);
+			auto required_size = this->calc_requirements(max_binding_index, specs);
 
 			// 3. 分配内存
 			this->buffer::operator=(buffer{ allocator, {
@@ -615,9 +618,9 @@ namespace mo_yanxi::vk {
 		const dynamic_descriptor_mapper& set_element_at(
 			std::uint32_t binding,
 			std::size_t arrayIndex,
+			VkDescriptorType type,
 			VkDeviceAddress addr,
-			VkDeviceSize size,
-			VkDescriptorType type
+			VkDeviceSize size
 		) const {
 			// 推断大小
 			std::size_t desc_size = (type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) ?
