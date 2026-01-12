@@ -26,7 +26,9 @@ namespace mo_yanxi::vk {
 	struct descriptor_properties {
 		std::size_t uniformBufferDescriptorSize{};
 		std::size_t combinedImageSamplerDescriptorSize{};
+		std::size_t sampledImageDescriptorSize{};
 		std::size_t storageImageDescriptorSize{};
+		std::size_t samplerDescriptorSize{};
 		std::size_t inputAttachmentDescriptorSize{};
 		std::size_t storageBufferDescriptorSize{};
 		std::size_t descriptorBufferOffsetAlignment{};
@@ -46,7 +48,9 @@ namespace mo_yanxi::vk {
 
 			uniformBufferDescriptorSize = descriptor_buffer_properties.uniformBufferDescriptorSize;
 			combinedImageSamplerDescriptorSize = descriptor_buffer_properties.combinedImageSamplerDescriptorSize;
+			sampledImageDescriptorSize = descriptor_buffer_properties.sampledImageDescriptorSize;
 			storageImageDescriptorSize = descriptor_buffer_properties.storageImageDescriptorSize;
+			samplerDescriptorSize = descriptor_buffer_properties.samplerDescriptorSize;
 			inputAttachmentDescriptorSize = descriptor_buffer_properties.inputAttachmentDescriptorSize;
 			storageBufferDescriptorSize = descriptor_buffer_properties.storageBufferDescriptorSize;
 			descriptorBufferOffsetAlignment = descriptor_buffer_properties.descriptorBufferOffsetAlignment;
@@ -76,7 +80,9 @@ namespace mo_yanxi::vk {
 
 		[[nodiscard]] std::size_t get_uniform_buffer_descriptor_size() const noexcept { return properties.uniformBufferDescriptorSize; }
 		[[nodiscard]] std::size_t get_combined_image_sampler_descriptor_size() const noexcept { return properties.combinedImageSamplerDescriptorSize; }
+		[[nodiscard]] std::size_t get_sampled_image_descriptor_size() const noexcept { return properties.sampledImageDescriptorSize; }
 		[[nodiscard]] std::size_t get_storage_image_descriptor_size() const noexcept { return properties.storageImageDescriptorSize; }
+		[[nodiscard]] std::size_t get_sampler_descriptor_size() const noexcept { return properties.samplerDescriptorSize; }
 		[[nodiscard]] std::size_t get_storage_buffer_descriptor_size() const noexcept { return properties.storageBufferDescriptorSize; }
 		[[nodiscard]] std::size_t get_input_attachment_descriptor_size() const noexcept { return properties.inputAttachmentDescriptorSize; }
 		[[nodiscard]] std::size_t get_offset_alignment() const noexcept { return properties.descriptorBufferOffsetAlignment; }
@@ -124,9 +130,19 @@ namespace mo_yanxi::vk {
 				rst.second = properties.combinedImageSamplerDescriptorSize;
 				break;
 			}
+			case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE: {
+				rst.first.data.pSampledImage = &imageInfo_non_rv;
+				rst.second = properties.sampledImageDescriptorSize;
+				break;
+			}
 			case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE: {
 				rst.first.data.pStorageImage = &imageInfo_non_rv;
 				rst.second = properties.storageImageDescriptorSize;
+				break;
+			}
+			case VK_DESCRIPTOR_TYPE_SAMPLER: {
+				rst.first.data.pSampler = &imageInfo_non_rv.sampler;
+				rst.second = properties.samplerDescriptorSize;
 				break;
 			}
 			case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT: {
@@ -252,8 +268,8 @@ namespace mo_yanxi::vk {
 				case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER: current_stride = properties.uniformBufferDescriptorSize; break;
 				case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER: current_stride = properties.storageBufferDescriptorSize; break;
 				case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT: current_stride = properties.inputAttachmentDescriptorSize; break;
-				case VK_DESCRIPTOR_TYPE_SAMPLER: current_stride = properties.combinedImageSamplerDescriptorSize; break;
-				case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE: current_stride = properties.combinedImageSamplerDescriptorSize; break;
+				case VK_DESCRIPTOR_TYPE_SAMPLER: current_stride = properties.samplerDescriptorSize; break;
+				case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE: current_stride = properties.sampledImageDescriptorSize; break;
 				default: throw std::runtime_error("Unsupported variable descriptor type");
 				}
 
