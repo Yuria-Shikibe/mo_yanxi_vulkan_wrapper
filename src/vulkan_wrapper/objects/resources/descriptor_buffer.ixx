@@ -163,6 +163,7 @@ namespace mo_yanxi::vk {
 	export struct descriptor_buffer : descriptor_buffer_base {
 	private:
 		std::uint32_t chunk_count{};
+		VkDeviceSize chunk_size{};
 
 	public:
 		using descriptor_buffer_base::descriptor_buffer_base;
@@ -175,6 +176,7 @@ namespace mo_yanxi::vk {
 			std::uint32_t bindings,
 			std::uint32_t chunk_count = 1
 		) : chunk_count{ chunk_count } {
+			assert(chunk_count > 0);
 
 			const auto device = allocator.get_device();
 			const auto physical_device = allocator.get_physical_device();
@@ -184,9 +186,15 @@ namespace mo_yanxi::vk {
 			VkDeviceSize dbo_size;
 			getDescriptorSetLayoutSizeEXT(device, layout, &dbo_size);
 
+			const auto alignment = get_offset_alignment();
+			if (alignment > 0) {
+				dbo_size = (dbo_size + alignment - 1) & ~(alignment - 1);
+			}
+			chunk_size = dbo_size;
+
 			this->buffer::operator=(buffer{ allocator, {
 				.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-				.size = dbo_size * chunk_count,
+				.size = chunk_size * chunk_count,
 				.usage = VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 			}, {
 				.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
@@ -199,7 +207,7 @@ namespace mo_yanxi::vk {
 		}
 
 		[[nodiscard]] constexpr VkDeviceSize get_chunk_size() const noexcept {
-			return get_size() / chunk_count;
+			return chunk_size;
 		}
 
 		[[nodiscard]] constexpr std::uint32_t get_chunk_count() const noexcept {
