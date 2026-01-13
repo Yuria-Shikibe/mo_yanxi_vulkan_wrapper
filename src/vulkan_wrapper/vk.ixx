@@ -25,7 +25,8 @@ export import :shader;
 
 namespace mo_yanxi::vk{
 	export
-	constexpr VkDeviceSize align_up(VkDeviceSize size, VkDeviceSize alignment) noexcept {
+	template <std::unsigned_integral T>
+	constexpr T align_up(T size, T alignment) noexcept {
 		assert(std::has_single_bit(alignment));
 		return (size + alignment - 1) & ~(alignment - 1);
 	}
