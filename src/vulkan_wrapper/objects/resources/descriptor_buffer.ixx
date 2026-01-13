@@ -184,7 +184,7 @@ namespace mo_yanxi::vk {
 			init_base(physical_device, device, layout, bindings);
 
 			VkDeviceSize dbo_size;
-			getDescriptorSetLayoutSizeEXT(device, layout, &dbo_size);
+			vk::getDescriptorSetLayoutSizeEXT(device, layout, &dbo_size);
 
 			const auto alignment = get_offset_alignment();
 			if (alignment > 0) {
