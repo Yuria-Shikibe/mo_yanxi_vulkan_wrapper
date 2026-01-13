@@ -1,6 +1,6 @@
-//
-// Created by Matrix on 2025/10/29.
-//
+module;
+
+#include <cassert>
 
 export module mo_yanxi.vk;
 
@@ -23,3 +23,10 @@ export import :uniform_buffer;
 export import :sampler;
 export import :shader;
 
+namespace mo_yanxi::vk{
+	export
+	constexpr VkDeviceSize align_up(VkDeviceSize size, VkDeviceSize alignment) noexcept {
+		assert(std::has_single_bit(alignment));
+		return (size + alignment - 1) & ~(alignment - 1);
+	}
+}
