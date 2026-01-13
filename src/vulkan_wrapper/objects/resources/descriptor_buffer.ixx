@@ -214,6 +214,23 @@ namespace mo_yanxi::vk {
 			return chunk_count;
 		}
 
+		void set_chunk_count(std::uint32_t new_chunk_count) {
+			if (new_chunk_count == chunk_count) return;
+			assert(new_chunk_count > 0);
+
+			const auto required_size = chunk_size * new_chunk_count;
+			if (required_size > this->get_size()) {
+				this->buffer::operator=(buffer{ get_allocator(), {
+					.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+					.size = required_size,
+					.usage = VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+				}, {
+					.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+				} });
+			}
+			chunk_count = new_chunk_count;
+		}
+
 		void bind_to(
 			VkCommandBuffer commandBuffer,
 			const VkPipelineBindPoint bindingPoint,
