@@ -8,10 +8,8 @@ set_project("mo_yanxi.vulkan_wrapper")
 if is_plat("windows") then
     if is_mode("debug") then
         set_runtimes("MDd")
-        add_requireconfs("spirv-cross", {configs = {runtimes = "MDd", debug = true}})
     else
         set_runtimes("MD")
-        add_requireconfs("spirv-cross", {configs = {runtimes = "MD", debug = false}})
     end
 else
     set_runtimes("c++_shared")
