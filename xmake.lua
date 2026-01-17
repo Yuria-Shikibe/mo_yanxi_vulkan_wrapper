@@ -34,11 +34,12 @@ function mo_yanxi_vulkan_wrapper_use_vulkan()
 
     local vulkan_sdk = os.getenv("VULKAN_SDK")
     if not vulkan_sdk then
-        raise("Vulkan SDK not found!")
+        print("Vulkan SDK not found!")
+    else
+        add_includedirs(path.join(vulkan_sdk, "Include"), {public = true})
+        add_linkdirs(path.join(vulkan_sdk, "Lib"), {public = true})
+        add_links("vulkan-1", {public = true})
     end
-    add_includedirs(path.join(vulkan_sdk, "Include"), {public = true})
-    add_linkdirs(path.join(vulkan_sdk, "Lib"), {public = true})
-    add_links("vulkan-1", {public = true})
 
     add_defines("VK_USE_64_BIT_PTR_DEFINES=1", {public = true})
 end
