@@ -13,11 +13,27 @@ namespace cmd{
 export void begin(
 	VkCommandBuffer buffer,
 	const VkCommandBufferUsageFlags flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-	const VkCommandBufferInheritanceInfo& inheritance = {}){
+	const VkCommandBufferInheritanceRenderingInfo& inheritance = {}){
 	VkCommandBufferBeginInfo beginInfo{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
 
 	beginInfo.flags = flags;
-	beginInfo.pInheritanceInfo = &inheritance; // Optional
+	const VkCommandBufferInheritanceInfo info{VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO, &inheritance};
+	if(inheritance.sType == VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_RENDERING_INFO){
+		beginInfo.pInheritanceInfo = &info;
+	}
+
+	if(const auto rst = vkBeginCommandBuffer(buffer, &beginInfo)){
+		throw vk_error(rst, "Failed to begin recording command buffer!");
+	}
+}
+export void begin_with_inheritance_info(
+	VkCommandBuffer buffer,
+	const VkCommandBufferUsageFlags flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT){
+	VkCommandBufferBeginInfo beginInfo{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+
+	beginInfo.flags = flags;
+	constexpr VkCommandBufferInheritanceInfo info{VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO};
+	beginInfo.pInheritanceInfo = &info;
 
 	if(const auto rst = vkBeginCommandBuffer(buffer, &beginInfo)){
 		throw vk_error(rst, "Failed to begin recording command buffer!");
@@ -106,7 +122,7 @@ public:
 
 	void begin(
 		const VkCommandBufferUsageFlags flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-		const VkCommandBufferInheritanceInfo& inheritance = {}) const{
+		const VkCommandBufferInheritanceRenderingInfo& inheritance = {}) const{
 		cmd::begin(get(), flags, inheritance);
 	}
 
@@ -146,9 +162,20 @@ public:
 	[[nodiscard]] explicit(false) scoped_recorder(VkCommandBuffer handler,
 		const VkCommandBufferUsageFlags flags =
 			VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-		const VkCommandBufferInheritanceInfo& inheritance = {})
+		const VkCommandBufferInheritanceRenderingInfo& inheritance = {})
 	: handler{handler}{
 		cmd::begin(handler, flags, inheritance);
+	}
+	[[nodiscard]] explicit(false) scoped_recorder(VkCommandBuffer handler,
+		const VkCommandBufferUsageFlags flags,
+		bool enable_secondary_only)
+	: handler{handler}{
+		if(enable_secondary_only){
+			cmd::begin_with_inheritance_info(handler, flags);
+		}else{
+			cmd::begin(handler, flags);
+		}
+
 	}
 
 	~scoped_recorder(){
@@ -351,8 +378,10 @@ private:
 	VkCommandPool pool{};
 
 public:
-	using unit_allocator_type = std::allocator_traits<Alloc>::template rebind_alloc<unit>;
-	using buffer_allocator_type = std::allocator_traits<Alloc>::template rebind_alloc<VkCommandBuffer>;
+	using allocator_type = Alloc;
+
+	using unit_allocator_type = std::allocator_traits<allocator_type>::template rebind_alloc<unit>;
+	using buffer_allocator_type = std::allocator_traits<allocator_type>::template rebind_alloc<VkCommandBuffer>;
 
 private:
 	std::vector<VkCommandBuffer, buffer_allocator_type> command_buffers{};
@@ -470,6 +499,20 @@ public:
 	[[nodiscard]] VkCommandPool get_pool() const noexcept{
 		return pool;
 	}
+
+
+	std::vector<VkSemaphoreSubmitInfo, typename std::allocator_traits<allocator_type>::template rebind_alloc<VkSemaphoreSubmitInfo>> get_waiting_semaphores(VkPipelineStageFlags2 stageFlags2) const {
+		std::vector<VkSemaphoreSubmitInfo, typename std::allocator_traits<allocator_type>::template rebind_alloc<VkSemaphoreSubmitInfo>> rst{units.size(), units.get_allocator()};
+		for (const auto & [idx, u] : units | std::views::enumerate){
+			rst[idx] = VkSemaphoreSubmitInfo{
+				.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+				.semaphore = u.get_semaphore(),
+				.value = u.counting,
+				.stageMask = stageFlags2,
+			};
+		}
+		return rst;
+	}
 };
 
 export
@@ -570,6 +613,24 @@ public:
     [[nodiscard]] VkCommandPool get_pool() const noexcept {
         return pool;
     }
+
+	void reset(std::size_t size, VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY){
+	    free();
+		if(buffers.size() == size)return;
+    	buffers.resize(size);
+    	const VkCommandBufferAllocateInfo allocInfo{
+    		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+			.pNext = nullptr,
+			.commandPool = pool,
+			.level = level,
+			.commandBufferCount = static_cast<std::uint32_t>(size)
+		};
+
+    	if (const auto rst = ::vkAllocateCommandBuffers(device, &allocInfo, buffers.data())) {
+    		throw vk_error(rst, "Failed to allocate command sequence!");
+    	}
+    }
+
 };
 
 struct command_pool : exclusive_handle<VkCommandPool>{

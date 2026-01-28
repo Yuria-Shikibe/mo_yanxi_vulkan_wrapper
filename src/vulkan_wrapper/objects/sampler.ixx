@@ -9,6 +9,7 @@ import mo_yanxi.handle_wrapper;
 import mo_yanxi.vk.util;
 
 namespace mo_yanxi::vk{
+
 	namespace preset{
 		export VkSamplerCreateInfo default_texture_sampler{
 			.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,

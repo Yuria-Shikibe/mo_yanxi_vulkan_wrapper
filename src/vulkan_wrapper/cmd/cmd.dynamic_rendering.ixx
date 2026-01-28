@@ -56,6 +56,12 @@ namespace mo_yanxi::vk{
 			colorAttachmentsInfo.clear();
 		}
 
+		void set_color_attachment_load_op(const VkAttachmentLoadOp loadOp){
+			for (auto & attachmentsinfo : colorAttachmentsInfo){
+				attachmentsinfo.loadOp = loadOp;
+			}
+		}
+
 		void push_color_attachment(
 			VkImageView view,
 			const VkImageLayout layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
@@ -80,11 +86,15 @@ namespace mo_yanxi::vk{
 			});
 		}
 
-		void begin_rendering(VkCommandBuffer commandBuffer, const VkRect2D& area) const{
+		std::span<VkRenderingAttachmentInfo> get_color_attachment_infos() noexcept{
+			return colorAttachmentsInfo;
+		}
+
+		void begin_rendering(VkCommandBuffer commandBuffer, const VkRect2D& area, VkRenderingFlags flags = 0) const{
 			const VkRenderingInfo info{
 				.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
 				.pNext = nullptr,
-				.flags = 0,
+				.flags = flags,
 				.renderArea = area,
 				.layerCount = 1,
 				.viewMask = 0,
@@ -96,6 +106,7 @@ namespace mo_yanxi::vk{
 
 			vkCmdBeginRendering(commandBuffer, &info);
 		}
+
 
 		void begin_rendering(
 			VkCommandBuffer commandBuffer,

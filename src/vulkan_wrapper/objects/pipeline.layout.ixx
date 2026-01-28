@@ -78,8 +78,8 @@ namespace mo_yanxi::vk{
 				}, flag});
 		}
 
-		void push_seq(const VkDescriptorType type, const VkShaderStageFlags stageFlags, const std::uint32_t count = 1){
-			push(bindings.size(), type, stageFlags, count);
+		void push_seq(const VkDescriptorType type, const VkShaderStageFlags stageFlags, const std::uint32_t count = 1, const VkDescriptorBindingFlags flag = 0){
+			push(bindings.size(), type, stageFlags, count, flag);
 		}
 
 		template <std::size_t size>

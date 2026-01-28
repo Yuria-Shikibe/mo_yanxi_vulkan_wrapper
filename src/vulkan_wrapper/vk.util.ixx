@@ -4,6 +4,9 @@ module;
 
 export module mo_yanxi.vk.util;
 
+import mo_yanxi.tuple_manipulate;
+
+
 export import :concepts;
 export import :invoker;
 export import :exception;
