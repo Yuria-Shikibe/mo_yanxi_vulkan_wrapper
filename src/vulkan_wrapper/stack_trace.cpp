@@ -1,5 +1,9 @@
 module mo_yanxi.stack_trace;
 
+#include <version>
+
+#if defined(__cpp_lib_stacktrace)
+
 import mo_yanxi.algo.string_parse;
 import mo_yanxi.meta_programming;
 
@@ -60,3 +64,5 @@ void mo_yanxi::print_stack_trace(std::ostream& ss, unsigned skip, const std::sta
 
 	std::println(ss, "\n");
 }
+
+#endif
