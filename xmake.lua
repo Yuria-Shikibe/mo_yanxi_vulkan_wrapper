@@ -38,8 +38,8 @@ target("mo_yanxi.vulkan_wrapper")
     if not vulkan_sdk then
         raise("Vulkan SDK not found!")
     end
-    add_includedirs(path.join(vulkan_sdk, "Include"), {public = true})
-    add_linkdirs(path.join(vulkan_sdk, "Lib"), {public = true})
+    add_includedirs(path.join(vulkan_sdk, "include"), {public = true})
+    add_linkdirs(path.join(vulkan_sdk, "lib"), {public = true})
     add_links("vulkan-1", {public = true})
     add_links("shaderc_shared", {public = true})
     add_defines("VK_USE_64_BIT_PTR_DEFINES=1", {public = true})
