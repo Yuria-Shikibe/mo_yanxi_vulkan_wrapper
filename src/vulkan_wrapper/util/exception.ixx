@@ -9,7 +9,7 @@ import std;
 namespace mo_yanxi::vk{
 	export struct vk_error final : std::exception{
 		[[nodiscard]] vk_error(const VkResult result, const std::string_view msg)
-			: std::exception(msg.data(), result), result{result}{
+			: std::exception(msg.data()), result{result}{
 		}
 
 		VkResult result{};
