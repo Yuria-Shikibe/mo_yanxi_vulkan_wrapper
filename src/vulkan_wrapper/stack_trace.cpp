@@ -1,6 +1,8 @@
-module mo_yanxi.stack_trace;
+module;
 
 #include <version>
+
+module mo_yanxi.stack_trace;
 
 #if defined(__cpp_lib_stacktrace)
 
