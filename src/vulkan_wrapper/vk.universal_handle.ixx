@@ -4,7 +4,9 @@ module;
 
 export module mo_yanxi.vk.universal_handle;
 
-namespace mo_yanxi::vk{
+namespace mo_yanxi{
+	namespace vk{
+
 
 export struct context_info{
 	VkInstance instance;
@@ -24,4 +26,5 @@ export struct image_handle{
 	VkImageView image_view;
 };
 
+	}
 }

@@ -152,17 +152,17 @@ export namespace mo_yanxi::vk{
 			){
 			push(args, stage);
 		}
-
-		template <typename ...T>
-			requires (std::same_as<T, shader_module> && ...)
-		[[nodiscard]] explicit(false) shader_chain(
-			const T& ...args){
-			chain.resize(sizeof...(T));
-
-			[&, this] <std::size_t ...Idx>(std::index_sequence<Idx...>){
-				((chain[Idx] = static_cast<const shader_module&>(args).get_create_info()), ...);
-			}(std::make_index_sequence<sizeof...(T)>{});
-		}
+		//
+		// template <typename ...T>
+		// 	requires (std::same_as<T, shader_module> && ...)
+		// [[nodiscard]] explicit(false) shader_chain(
+		// 	const T& ...args){
+		// 	chain.resize(sizeof...(T));
+		//
+		// 	[&, this] <std::size_t ...Idx>(std::index_sequence<Idx...>){
+		// 		((chain[Idx] = static_cast<const shader_module&>(args).get_create_info()), ...);
+		// 	}(std::make_index_sequence<sizeof...(T)>{});
+		// }
 
 		[[nodiscard]] explicit(false) shader_chain(
 			const std::initializer_list<VkPipelineShaderStageCreateInfo> args) : chain{args}{}
