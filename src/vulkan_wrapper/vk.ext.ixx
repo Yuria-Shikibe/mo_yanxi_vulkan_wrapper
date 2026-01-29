@@ -274,6 +274,3 @@ export void load_ext(VkInstance instance){
 	vkGetDeviceFaultInfoEXT = LoadFuncPtr(instance, vkGetDeviceFaultInfoEXT);
 }
 }
-
-namespace mo_yanxi::vk::cmd{
-}
