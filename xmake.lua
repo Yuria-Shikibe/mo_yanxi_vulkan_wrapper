@@ -55,3 +55,12 @@ target("mo_yanxi.vulkan_wrapper.test")
     add_deps("mo_yanxi.vulkan_wrapper")
     add_files("main.cpp")
 target_end()
+--
+--target("test")
+--    set_extension(".exe")
+--    set_kind("binary")
+--    set_languages("c++latest")
+--
+--    add_files("main.cpp")
+--    add_files("src/test/**.ixx")
+--target_end()
