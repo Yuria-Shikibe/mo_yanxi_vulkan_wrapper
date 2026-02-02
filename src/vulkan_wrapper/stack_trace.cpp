@@ -6,7 +6,6 @@ module mo_yanxi.stack_trace;
 
 #if defined(__cpp_lib_stacktrace)
 
-import mo_yanxi.algo.string_parse;
 import mo_yanxi.meta_programming;
 
 void mo_yanxi::print_stack_trace(std::ostream& ss, unsigned skip, const std::stacktrace& currentStacktrace){
