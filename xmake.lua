@@ -23,6 +23,9 @@ target("mo_yanxi.vulkan_wrapper")
 
     add_deps("mo_yanxi.utility")
 
+    set_symbols("debug")
+    set_strip("debug")
+
     if is_mode("debug") then
         add_defines("MO_YANXI_VULKAN_WRAPPER_ENABLE_CHECK=1")
     else
