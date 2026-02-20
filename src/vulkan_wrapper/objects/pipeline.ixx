@@ -96,7 +96,6 @@ namespace mo_yanxi::vk{
 		VkFormat stencil_format = VK_FORMAT_UNDEFINED;
 
 		shader_chain shaderChain{};
-		std::vector<VkDynamicState> dynamicStates{};
 
 		std::optional<VkPipelineVertexInputStateCreateInfo> vertexInputInfo{VkPipelineVertexInputStateCreateInfo{
 				.sType =  VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -160,17 +159,15 @@ namespace mo_yanxi::vk{
 		std::optional<VkViewport> staticViewport{};
 		std::optional<VkRect2D> staticScissor{};
 
-		struct color_attachment_info{
-			VkFormat format;
-			VkPipelineColorBlendAttachmentState blend;
-		};
-		std::vector<color_attachment_info> color_attachments{};
-
 	public:
+		std::vector<VkDynamicState> dynamic_states{};
+		std::vector<VkFormat> attachment_formats{};
+		std::vector<VkPipelineColorBlendAttachmentState> attachment_blend_states{};
+
 		void set_blending_dynamic(bool enable_equation, bool enable_write_mask){
-			if(enable_equation || enable_write_mask)dynamicStates.push_back(VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT);
-			if(enable_equation)dynamicStates.push_back(VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT);
-			if(enable_write_mask)dynamicStates.push_back(VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT);
+			if(enable_equation || enable_write_mask)dynamic_states.push_back(VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT);
+			if(enable_equation)dynamic_states.push_back(VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT);
+			if(enable_write_mask)dynamic_states.push_back(VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT);
 		}
 
 		graphic_pipeline_template& set_multisample(
@@ -226,22 +223,18 @@ namespace mo_yanxi::vk{
 		}
 
 		graphic_pipeline_template& push_color_attachment_format(
-			const VkFormat format,
+			const VkFormat format
+			){
+			attachment_formats.emplace_back(format);
+			return *this;
+		}
+		graphic_pipeline_template& push_color_attachment_blend_state(
 			const VkPipelineColorBlendAttachmentState& blend = blending::alpha_blend
 			){
-			color_attachments.emplace_back(format, blend);
+			attachment_blend_states.emplace_back(blend);
 			return *this;
 		}
 
-		graphic_pipeline_template& push_color_attachment_format(
-			const VkFormat format,
-			const VkPipelineColorBlendAttachmentState& blend,
-			std::size_t count){
-			for(const auto& [r, b] : std::ranges::views::repeat(color_attachment_info{format, blend}, count)){
-				push_color_attachment_format(r, b);
-			}
-			return *this;
-		}
 
 		graphic_pipeline_template& set_viewport(
 			const VkViewport& viewport){
@@ -267,21 +260,17 @@ namespace mo_yanxi::vk{
 			const VkPipelineCreateFlags flags,
 			std::array<float, 4> blend_constants = {}
 		) const{
-
-			std::vector attachmentFormats{std::from_range, color_attachments | std::views::transform(&color_attachment_info::format)};
-			std::vector attachmentBlends{std::from_range, color_attachments | std::views::transform(&color_attachment_info::blend)};
-
 			VkPipelineRenderingCreateInfo pipelineRenderingCreateInfo{
 					.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
 					.pNext = nullptr,
 					.viewMask = 0,
-					.colorAttachmentCount = static_cast<std::uint32_t>(attachmentFormats.size()),
-					.pColorAttachmentFormats = attachmentFormats.data(),
+					.colorAttachmentCount = static_cast<std::uint32_t>(attachment_formats.size()),
+					.pColorAttachmentFormats = attachment_formats.data(),
 					.depthAttachmentFormat = depth_format,
 					.stencilAttachmentFormat = stencil_format
 				};
 
-			std::vector tempDynamicStates{dynamicStates};
+			std::vector tempDynamicStates{dynamic_states};
 			if(!staticViewport){
 				tempDynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 			}
@@ -304,8 +293,8 @@ namespace mo_yanxi::vk{
 					.flags = 0,
 					.logicOpEnable = false,
 					.logicOp = VK_LOGIC_OP_COPY,
-					.attachmentCount = static_cast<std::uint32_t>(attachmentBlends.size()),
-					.pAttachments = attachmentBlends.data(),
+					.attachmentCount = static_cast<std::uint32_t>(attachment_blend_states.size()),
+					.pAttachments = attachment_blend_states.data(),
 					.blendConstants = {blend_constants[0], blend_constants[1], blend_constants[2], blend_constants[3]}
 				};
 

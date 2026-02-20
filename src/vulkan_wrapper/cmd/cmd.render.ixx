@@ -208,4 +208,8 @@ namespace mo_yanxi::vk::cmd{
 		viewport.maxDepth = 1.0f;
 		vkCmdSetViewport(command_buffer, 0, 1, &viewport);
 	}
+
+	export void set_viewport(VkCommandBuffer command_buffer, VkViewport viewport){
+		vkCmdSetViewport(command_buffer, 0, 1, &viewport);
+	}
 }

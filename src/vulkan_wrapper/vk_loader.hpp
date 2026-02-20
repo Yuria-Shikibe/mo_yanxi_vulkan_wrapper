@@ -9,3 +9,5 @@
 	return ptr;\
 }()\
 
+#define DEFINE_FUNC_PTR(name) std::add_pointer_t<decltype(name)> _PFN_##name = nullptr
+
