@@ -337,6 +337,14 @@ concept persistent_range_of = requires{
 	requires std::convertible_to<std::ranges::range_reference_t<T>, const V&>;
 };
 
+struct descriptor_heap_storage_section{
+	heap_section_type type;
+	std::uint32_t start_index;   // Shader 中可直接使用的全局起始 Index
+	std::uint32_t max_capacity;  // 本区块的最大容纳个数
+	std::uint32_t current_size;  // 本区块当前已分配的个数
+};
+
+
 export
 struct resource_descriptor_heap : buffer_cpu_to_gpu {
 	// 扩展 subrange 结构以追踪类型和当前的分配状态

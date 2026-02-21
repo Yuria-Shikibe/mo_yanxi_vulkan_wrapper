@@ -132,6 +132,10 @@ public:
 		return layers;
 	}
 
+	[[nodiscard]] VkFormat get_format() const noexcept{
+		return format_;
+	}
+
 	void init_layout(VkCommandBuffer command_buffer) const noexcept{
 		image.init_layout(
 			command_buffer,
