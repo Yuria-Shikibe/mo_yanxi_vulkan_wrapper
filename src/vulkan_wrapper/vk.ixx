@@ -18,6 +18,7 @@ export import :resources;
 export import :aliasing;
 export import :image_derives;
 export import :descriptor_buffer;
+export import :descriptor_heap;
 export import :uniform_buffer;
 
 export import :sampler;

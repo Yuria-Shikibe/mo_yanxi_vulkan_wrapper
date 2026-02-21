@@ -160,6 +160,10 @@ namespace mo_yanxi::vk{
 		buffer_cpu_to_gpu(buffer_cpu_to_gpu&& other) noexcept = default;
 		buffer_cpu_to_gpu& operator=(buffer_cpu_to_gpu&& other) noexcept = default;
 
+		[[nodiscard]] std::byte* get_mapped_ptr() const noexcept{
+			return mapped;
+		}
+
 		[[nodiscard]] void* map() const noexcept{
 			return mapped;
 		}

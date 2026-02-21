@@ -11,3 +11,7 @@
 
 #define DEFINE_FUNC_PTR(name) std::add_pointer_t<decltype(name)> _PFN_##name = nullptr
 
+#define LoadFuncPtrByName(instance, name) [&]{ \
+	using Ty = decltype(name); /*used for IDE hint*/ \
+	_PFN_##name = LoadFuncPtr(instance, name); \
+}()
