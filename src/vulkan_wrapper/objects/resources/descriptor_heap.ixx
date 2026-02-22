@@ -563,6 +563,10 @@ protected:
 		auto begin_idx = this->allocate(section_idx, create_infos.size());
 		this->get_host_address_range(section_idx, std::views::iota(begin_idx, begin_idx + create_infos.size()), begin);
 		writeResourceDescriptorsEXT(get_device(), create_infos.size(), create_infos.data(), begin);
+		// for (const auto & [ptr, size] : buffer){
+		// 	flush(size, static_cast<const std::byte*>(ptr) - get_mapped_ptr());
+		// }
+
 		return begin_idx;
 	}
 };

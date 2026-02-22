@@ -180,5 +180,9 @@ export namespace mo_yanxi::vk{
 		[[nodiscard]] std::uint32_t size() const noexcept{
 			return static_cast<std::uint32_t>(chain.size());
 		}
+
+		auto& operator[](this auto& self, std::size_t index) noexcept{
+			return self.chain[index];
+		}
 	};
 }
