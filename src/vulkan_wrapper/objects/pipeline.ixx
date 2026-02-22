@@ -258,11 +258,19 @@ namespace mo_yanxi::vk{
 			VkDevice device,
 			VkPipelineLayout layout,
 			const VkPipelineCreateFlags flags,
+			const VkPipelineCreateFlags2 flags2,
 			std::array<float, 4> blend_constants = {}
 		) const{
+
+			VkPipelineCreateFlags2CreateInfo flags2s{
+				.sType = VK_STRUCTURE_TYPE_PIPELINE_CREATE_FLAGS_2_CREATE_INFO,
+				.pNext = nullptr,
+				.flags = flags2
+			};
+
 			VkPipelineRenderingCreateInfo pipelineRenderingCreateInfo{
 					.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
-					.pNext = nullptr,
+					.pNext = flags2 ? &flags2s : nullptr,
 					.viewMask = 0,
 					.colorAttachmentCount = static_cast<std::uint32_t>(attachment_formats.size()),
 					.pColorAttachmentFormats = attachment_formats.data(),
@@ -339,6 +347,7 @@ namespace mo_yanxi::vk{
 					.basePipelineIndex = 0
 				};
 
+
 			VkPipeline pipeline;
 			if(const auto rst = vkCreateGraphicsPipelines(device, nullptr, 1, &createInfo, nullptr, &pipeline)){
 				throw vk_error{rst, "Failed to create pipeline"};
@@ -364,7 +373,15 @@ namespace mo_yanxi::vk{
 			const VkPipelineCreateFlags flags,
 			const graphic_pipeline_template& pipelineTemplate,
 			std::array<float, 4> blend_constants = {}) : device{device}{
-			handle = pipelineTemplate.create(device, layout, flags, blend_constants);
+			handle = pipelineTemplate.create(device, layout, flags, 0, blend_constants);
+		}
+		[[nodiscard]] pipeline(
+			VkDevice device,
+			const VkPipelineCreateFlags flags1,
+			const VkPipelineCreateFlags2 flags2,
+			const graphic_pipeline_template& pipelineTemplate,
+			std::array<float, 4> blend_constants = {}) : device{device}{
+			handle = pipelineTemplate.create(device, nullptr, flags1, flags2, blend_constants);
 		}
 
 		[[nodiscard]] pipeline(
