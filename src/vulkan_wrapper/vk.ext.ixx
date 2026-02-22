@@ -112,20 +112,20 @@ export void getDeviceFaultInfo(
 namespace cmd{
 export void bindSamplerHeapEXT(
 	VkCommandBuffer commandBuffer,
-	const VkBindHeapInfoEXT* pBindInfo){
-	_PFN_vkCmdBindSamplerHeapEXT(commandBuffer, pBindInfo);
+	const VkBindHeapInfoEXT& pBindInfo){
+	_PFN_vkCmdBindSamplerHeapEXT(commandBuffer, &pBindInfo);
 }
 
 export void bindResourceHeapEXT(
 	VkCommandBuffer commandBuffer,
-	const VkBindHeapInfoEXT* pBindInfo){
-	_PFN_vkCmdBindResourceHeapEXT(commandBuffer, pBindInfo);
+	const VkBindHeapInfoEXT& pBindInfo){
+	_PFN_vkCmdBindResourceHeapEXT(commandBuffer, &pBindInfo);
 }
 
 export void pushDataEXT(
 	VkCommandBuffer commandBuffer,
-	const VkPushDataInfoEXT* pPushDataInfo){
-	_PFN_vkCmdPushDataEXT(commandBuffer, pPushDataInfo);
+	const VkPushDataInfoEXT& pPushDataInfo){
+	_PFN_vkCmdPushDataEXT(commandBuffer, &pPushDataInfo);
 }
 
 export void setColorBlendEnableEXT(

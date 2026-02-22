@@ -225,6 +225,8 @@ public:
 	}
 
 	[[nodiscard]] VkBindHeapInfoEXT get_bind_info() const noexcept {
+		assert(std::bit_cast<std::uintptr_t>(get_address()) % 32 == 0);
+
 		return VkBindHeapInfoEXT{
 			.sType = VK_STRUCTURE_TYPE_BIND_HEAP_INFO_EXT,
 			.pNext = nullptr,
@@ -402,6 +404,7 @@ public:
 	}
 
 	[[nodiscard]] VkBindHeapInfoEXT get_bind_info() const noexcept {
+		assert(std::bit_cast<std::uintptr_t>(get_address()) % 32 == 0);
 		return VkBindHeapInfoEXT{
 			.sType = VK_STRUCTURE_TYPE_BIND_HEAP_INFO_EXT,
 			.pNext = nullptr,
@@ -455,11 +458,18 @@ public:
 		return prop_.min_reserved_size + global_idx * entry_size;
 	}
 
+
+	[[nodiscard]] std::uint32_t get_section_begin_index(std::uint32_t section_idx) const noexcept {
+		assert(section_idx < subranges_.size());
+		const auto& sec = subranges_[section_idx];
+		return sec.start_index;
+	}
+
 	template <std::ranges::input_range IdxRng, std::output_iterator<VkHostAddressRangeEXT> OutIt>
 		requires (std::convertible_to<std::ranges::range_reference_t<IdxRng>, std::uint32_t>)
 	OutIt get_host_address_range(std::uint32_t section_idx, IdxRng&& rng, OutIt out) const {
 		const auto& sec = subranges_[section_idx];
-		auto src = static_cast<std::byte*>(this->get_mapped_ptr());
+		auto src = this->get_mapped_ptr();
 		VkDeviceSize entry_size = (sec.type == heap_section_type::image) ? prop_.descriptor_image_size : prop_.descriptor_buffer_size;
 
 		for(std::uint32_t global_idx : rng){
