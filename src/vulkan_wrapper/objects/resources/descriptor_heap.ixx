@@ -195,7 +195,7 @@ public:
 
 	VkDeviceSize get_offset(std::uint32_t index) const noexcept {
 		assert(index < size_);
-		return prop_.min_reserved_size + index * prop_.descriptor_entry_size;
+		return /*prop_.min_reserved_size +*/ index * prop_.descriptor_entry_size;
 	}
 
 	void* get_host_ptr(std::uint32_t index) const noexcept {
@@ -267,7 +267,10 @@ protected:
 		const auto begin = buffer.data();
 		auto begin_idx = this->allocate(create_infos.size());
 		this->get_host_address_range(std::views::iota(begin_idx, begin_idx + create_infos.size()), begin);
-		vk::writeResourceDescriptorsEXT(get_device(), create_infos.size(), create_infos.data(), begin);
+
+		if(auto rst = writeResourceDescriptorsEXT(get_device(), create_infos.size(), create_infos.data(), begin); rst != VK_SUCCESS){
+			throw vk::vk_error{rst, "Failed to write sampler d"};
+		}
 	}
 };
 
@@ -455,7 +458,7 @@ public:
 		assert(section_idx < subranges_.size());
 		const auto& sec = subranges_[section_idx];
 		VkDeviceSize entry_size = (sec.type == heap_section_type::image) ? prop_.descriptor_image_size : prop_.descriptor_buffer_size;
-		return prop_.min_reserved_size + global_idx * entry_size;
+		return /*prop_.min_reserved_size*/ + global_idx * entry_size;
 	}
 
 
@@ -474,7 +477,7 @@ public:
 
 		for(std::uint32_t global_idx : rng){
 			*out = VkHostAddressRangeEXT{
-				.address = src + prop_.min_reserved_size + global_idx * entry_size,
+				.address = src + /*prop_.min_reserved_size*/ + global_idx * entry_size,
 				.size = entry_size
 			};
 			++out;
@@ -562,7 +565,9 @@ protected:
 		const auto begin = buffer.data();
 		auto begin_idx = this->allocate(section_idx, create_infos.size());
 		this->get_host_address_range(section_idx, std::views::iota(begin_idx, begin_idx + create_infos.size()), begin);
-		writeResourceDescriptorsEXT(get_device(), create_infos.size(), create_infos.data(), begin);
+		if(auto rst = writeResourceDescriptorsEXT(get_device(), create_infos.size(), create_infos.data(), begin); rst != VK_SUCCESS){
+			throw vk::vk_error{rst, "Failed to write res d"};
+		}
 		// for (const auto & [ptr, size] : buffer){
 		// 	flush(size, static_cast<const std::byte*>(ptr) - get_mapped_ptr());
 		// }
