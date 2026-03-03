@@ -25,7 +25,7 @@ VkBool32 mo_yanxi::vk::validationCallback(
 	print_stack_trace(std::cerr, 1);
 
 // #ifdef _MSC_VER
-// 	__debugbreak();
+	__debugbreak();
 // #endif
 
 	return false;
