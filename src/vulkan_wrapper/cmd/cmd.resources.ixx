@@ -214,6 +214,7 @@ namespace mo_yanxi::vk::cmd{
 		// }
 
 		void apply(VkCommandBuffer command_buffer, bool reserve = false) noexcept{
+			if(empty())return;
 			const auto d = create();
 			vkCmdPipelineBarrier2(command_buffer, &d);
 			if(!reserve){
