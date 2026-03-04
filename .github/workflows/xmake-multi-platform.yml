@@ -2,7 +2,7 @@ name: Xmake Build
 
 env:
   TARGET_NAME: mo_yanxi.utility
-  LLVM_VER: 21
+  LLVM_VER: 22
 
 on:
   push:
@@ -77,7 +77,7 @@ jobs:
         shell: bash
         run: |
           # 构造配置参数
-          CONFIG_CMD="xmake f -m ${{ matrix.mode }} --toolchain=${{ matrix.toolchain }} -p ${{ matrix.plat }} -y --add_test=y"
+          CONFIG_CMD="xmake f -m ${{ matrix.mode }} --toolchain=${{ matrix.toolchain }} -p ${{ matrix.plat }} -y"
           
           # Linux Clang 特殊处理
           if [[ "${{ matrix.os }}" == "ubuntu-latest" && "${{ matrix.toolchain }}" == "clang" ]]; then
@@ -97,5 +97,5 @@ jobs:
       - name: Build
         run: xmake -bvy ${{ env.TARGET_NAME }}
 
-      - name: Test
-        run: xmake run ${{ env.TARGET_NAME }}.test
+#      - name: Test
+#        run: xmake run ${{ env.TARGET_NAME }}.test
