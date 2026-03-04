@@ -77,7 +77,13 @@ jobs:
         shell: bash
         run: |
           # 构造配置参数
-          CONFIG_CMD="xmake f -m ${{ matrix.mode }} --toolchain=${{ matrix.toolchain }} -p ${{ matrix.plat }} -y"
+          CONFIG_CMD="xmake f --mode=${{ matrix.mode }} --toolchain=${{ matrix.toolchain }} -y"
+          
+          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+            CONFIG_CMD="$CONFIG_CMD -p linux"
+          else
+            CONFIG_CMD="$CONFIG_CMD -p windows"
+          fi
           
           # Linux Clang 特殊处理
           if [[ "${{ matrix.os }}" == "ubuntu-latest" && "${{ matrix.toolchain }}" == "clang" ]]; then
