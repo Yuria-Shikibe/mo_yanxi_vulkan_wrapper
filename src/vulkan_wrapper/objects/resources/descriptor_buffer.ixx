@@ -464,6 +464,21 @@ namespace mo_yanxi::vk {
 		}
 
 	public:
+		// 新增：专门用于 Sampled Image 的绑定接口
+		const descriptor_mapper& set_sampled_image(
+			const std::uint32_t binding,
+			VkImageView imageView,
+			const std::uint32_t chunkIndex = 0,
+			const VkImageLayout imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		) const {
+			const VkDescriptorImageInfo image_descriptor{
+				.sampler = VK_NULL_HANDLE, // Sampled Image 明确不需要 Sampler
+				.imageView = imageView,
+				.imageLayout = imageLayout
+		};
+			return set_image(binding, image_descriptor, chunkIndex, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+		}
+
 		const descriptor_mapper& set_storage_buffer(
 			const std::uint32_t binding,
 			const VkDeviceAddress address,
@@ -596,8 +611,15 @@ namespace mo_yanxi::vk {
 		) const {
 			std::size_t currentOffset = 0;
 			// 确定类型
-			VkDescriptorType realType = (type == VK_DESCRIPTOR_TYPE_MAX_ENUM) ?
-				(sampler ? VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE) : type;
+			// 建议：如果没有传递具体类型，且没有 sampler，直接抛出异常或要求显式声明
+			VkDescriptorType realType = type;
+			if (realType == VK_DESCRIPTOR_TYPE_MAX_ENUM) {
+				if (sampler != VK_NULL_HANDLE) {
+					realType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				} else {
+					throw std::invalid_argument("Cannot deduce descriptor type without a sampler. Explicitly specify VK_DESCRIPTOR_TYPE_STORAGE_IMAGE or VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE.");
+				}
+			}
 
 			auto [_, size] = buffer_obj->get_image_get_info({}, realType);
 
@@ -734,8 +756,15 @@ namespace mo_yanxi::vk {
 			const VkDescriptorType type = VK_DESCRIPTOR_TYPE_MAX_ENUM
 		) const {
 			// 自动推导类型
-			VkDescriptorType realType = (type == VK_DESCRIPTOR_TYPE_MAX_ENUM) ?
-				(sampler ? VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE) : type;
+			// 建议：如果没有传递具体类型，且没有 sampler，直接抛出异常或要求显式声明
+			VkDescriptorType realType = type;
+			if (realType == VK_DESCRIPTOR_TYPE_MAX_ENUM) {
+				if (sampler != VK_NULL_HANDLE) {
+					realType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				} else {
+					throw std::invalid_argument("Cannot deduce descriptor type without a sampler. Explicitly specify VK_DESCRIPTOR_TYPE_STORAGE_IMAGE or VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE.");
+				}
+			}
 
 			auto* buf = buffer_obj.get();
 			VkDeviceSize stride = buf->get_binding_stride(binding);
