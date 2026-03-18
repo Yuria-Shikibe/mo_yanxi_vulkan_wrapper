@@ -2,7 +2,7 @@ module;
 
 #include <cassert>
 
-#define VMA_IMPLEMENTATION
+// #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 
 export module mo_yanxi.vk.util:vma;
