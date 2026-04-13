@@ -496,6 +496,24 @@ namespace mo_yanxi::vk {
 			return *this;
 		}
 
+		const descriptor_mapper& set_buffer(
+			const VkDescriptorType type,
+			const std::uint32_t binding,
+			const VkDeviceAddress address,
+			const VkDeviceSize size,
+			const std::uint32_t chunkIndex = 0,
+			const VkFormat format = VK_FORMAT_UNDEFINED
+		) const {
+			descriptor_write_helper::write_buffer(
+				buffer_obj->get_device(),
+				get_ptr(binding, chunkIndex),
+				buffer_obj->get_storage_buffer_descriptor_size(),
+				type,
+				address, size, format
+			);
+			return *this;
+		}
+
 		const descriptor_mapper& set_uniform_buffer(
 			const std::uint32_t binding,
 			const buffer& ubo,

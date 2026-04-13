@@ -110,7 +110,7 @@ namespace mo_yanxi::vk{
 				.depthTestEnable = false,
 				.depthWriteEnable = false,
 				.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
-				.depthBoundsTestEnable = true,
+				.depthBoundsTestEnable = false,
 				.stencilTestEnable = false,
 				.front = {},
 				.back = {},

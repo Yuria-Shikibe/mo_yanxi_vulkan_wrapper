@@ -173,26 +173,6 @@ namespace mo_yanxi::vk{
 		}
 	};
 
-	export struct storage_buffer : buffer{
-
-	private:
-		VkBufferUsageFlags usage{};
-	public:
-		[[nodiscard]] storage_buffer() = default;
-
-		[[nodiscard]] storage_buffer(const vk::allocator_usage allocator, VkDeviceSize size, VkBufferUsageFlags usages)
-			: buffer(allocator, {
-				.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-				.size = size,
-				.usage = usages,
-			}, {.usage = VMA_MEMORY_USAGE_GPU_ONLY}), usage(usages){
-		}
-
-		void resize(VkDeviceSize size){
-			this->operator=(storage_buffer{get_allocator(), size, usage});
-		}
-	};
-
 	export
 	template <std::derived_from<buffer> Bty>
 	struct buffer_mapper{
