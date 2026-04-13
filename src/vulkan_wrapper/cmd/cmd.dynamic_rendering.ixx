@@ -90,10 +90,10 @@ namespace mo_yanxi::vk{
 			return colorAttachmentsInfo;
 		}
 
-		void begin_rendering(VkCommandBuffer commandBuffer, const VkRect2D& area, VkRenderingFlags flags = 0) const{
+		void begin_rendering(VkCommandBuffer commandBuffer, const VkRect2D& area, VkRenderingFlags flags = 0, void* pnext = nullptr) const{
 			const VkRenderingInfo info{
 				.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
-				.pNext = nullptr,
+				.pNext = pnext,
 				.flags = flags,
 				.renderArea = area,
 				.layerCount = 1,
