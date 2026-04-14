@@ -11,19 +11,19 @@ import std;
 
 namespace mo_yanxi::vk{
 export namespace blending{
-constexpr auto default_mask =
+constexpr inline auto default_mask =
 	VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 
-constexpr VkPipelineColorBlendAttachmentState overwrite{
+constexpr inline VkPipelineColorBlendAttachmentState overwrite{
 		.blendEnable = false,
 		.colorWriteMask = default_mask
 	};
 
-constexpr VkPipelineColorBlendAttachmentState disable = overwrite;
+constexpr inline VkPipelineColorBlendAttachmentState disable = overwrite;
 
-constexpr VkPipelineColorBlendAttachmentState discard{.colorWriteMask = 0};
+constexpr inline VkPipelineColorBlendAttachmentState discard{.colorWriteMask = 0};
 
-constexpr VkPipelineColorBlendAttachmentState mask_draw{
+constexpr inline VkPipelineColorBlendAttachmentState mask_draw{
 		.blendEnable = true,
 
 		.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
@@ -36,7 +36,7 @@ constexpr VkPipelineColorBlendAttachmentState mask_draw{
 		.colorWriteMask = VK_COLOR_COMPONENT_R_BIT
 	};
 
-constexpr VkPipelineColorBlendAttachmentState scaled_alpha_blend{
+constexpr inline VkPipelineColorBlendAttachmentState scaled_alpha_blend{
 		.blendEnable = true,
 
 		.srcColorBlendFactor = VK_BLEND_FACTOR_ONE,
@@ -49,7 +49,20 @@ constexpr VkPipelineColorBlendAttachmentState scaled_alpha_blend{
 		.colorWriteMask = default_mask
 	};
 
-constexpr VkPipelineColorBlendAttachmentState alpha_blend{
+constexpr inline VkPipelineColorBlendAttachmentState max_alpha_blend{
+		.blendEnable = true,
+
+		.srcColorBlendFactor = VK_BLEND_FACTOR_ONE,
+		.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+		.colorBlendOp = VK_BLEND_OP_ADD,
+		.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+		.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+		.alphaBlendOp = VK_BLEND_OP_MAX,
+
+		.colorWriteMask = default_mask
+	};
+
+constexpr inline VkPipelineColorBlendAttachmentState alpha_blend{
 		.blendEnable = true,
 
 		.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
@@ -62,7 +75,7 @@ constexpr VkPipelineColorBlendAttachmentState alpha_blend{
 		.colorWriteMask = default_mask
 	};
 
-constexpr VkPipelineColorBlendAttachmentState add{
+constexpr inline VkPipelineColorBlendAttachmentState add{
 		.blendEnable = true,
 
 		.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
@@ -75,7 +88,7 @@ constexpr VkPipelineColorBlendAttachmentState add{
 		.colorWriteMask = default_mask
 	};
 
-constexpr VkPipelineColorBlendAttachmentState reverse{
+constexpr inline VkPipelineColorBlendAttachmentState reverse{
 		.blendEnable = true,
 
 		.srcColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR,
@@ -88,7 +101,7 @@ constexpr VkPipelineColorBlendAttachmentState reverse{
 		.colorWriteMask = default_mask
 	};
 
-constexpr VkPipelineColorBlendAttachmentState lock_alpha{
+constexpr inline VkPipelineColorBlendAttachmentState lock_alpha{
 		.blendEnable = true,
 
 		.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
@@ -175,6 +188,8 @@ protected:
 	std::optional<VkRect2D> staticScissor{};
 
 	std::vector<std::uint32_t> color_input_attachment_indices{};
+	std::vector<std::uint32_t> color_attachment_locations{};
+
 	std::optional<std::uint32_t> depth_input_attachment_index{};
 	std::optional<std::uint32_t> stencil_input_attachment_index{};
 
@@ -322,23 +337,19 @@ public:
 			use_input_attachment = true;
 		}
 
-		std::uint32_t depth_idx = depth_input_attachment_index.value_or(VK_ATTACHMENT_UNUSED);
-		std::uint32_t stencil_idx = stencil_input_attachment_index.value_or(VK_ATTACHMENT_UNUSED);
-
-		VkRenderingInputAttachmentIndexInfoKHR inputAttachmentInfo
-			{
-				.sType = VK_STRUCTURE_TYPE_RENDERING_INPUT_ATTACHMENT_INDEX_INFO_KHR,
-
-				.pNext = pipelineRenderingCreateInfo.pNext,
-				.colorAttachmentCount = static_cast<std::uint32_t>(color_input_attachment_indices.size()),
-				.pColorAttachmentInputIndices = color_input_attachment_indices.data(),
-				.pDepthInputAttachmentIndex = &depth_idx,
-				.pStencilInputAttachmentIndex = &stencil_idx
-			};
-
-		if(use_input_attachment){
-			pipelineRenderingCreateInfo.pNext = &inputAttachmentInfo;
-		}
+		// VkRenderingInputAttachmentIndexInfoKHR inputAttachmentInfo
+		// 	{
+		// 		.sType = VK_STRUCTURE_TYPE_RENDERING_INPUT_ATTACHMENT_INDEX_INFO_KHR,
+		// 		.pNext = pipelineRenderingCreateInfo.pNext,
+		// 		.colorAttachmentCount = static_cast<std::uint32_t>(color_input_attachment_indices.size()),
+		// 		.pColorAttachmentInputIndices = color_input_attachment_indices.data(),
+		// 		.pDepthInputAttachmentIndex = depth_input_attachment_index.has_value() ? &depth_input_attachment_index.value() : nullptr,
+		// 		.pStencilInputAttachmentIndex = stencil_input_attachment_index.has_value() ? &stencil_input_attachment_index.value() : nullptr
+		// 	};
+		//
+		// if(use_input_attachment){
+		// 	pipelineRenderingCreateInfo.pNext = &inputAttachmentInfo;
+		// }
 
 
 		std::vector tempDynamicStates{dynamic_states};
