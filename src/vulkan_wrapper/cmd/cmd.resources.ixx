@@ -25,7 +25,6 @@ namespace mo_yanxi::vk::cmd{
 		std::swap(t.srcStageMask, t.dstStageMask);
 	}
 
-	export
 	template <>
 	void swap_stage(VkImageMemoryBarrier2& t){
 		std::swap(t.srcAccessMask, t.dstAccessMask);
@@ -34,7 +33,6 @@ namespace mo_yanxi::vk::cmd{
 		std::swap(t.oldLayout, t.newLayout);
 	}
 
-	export
 	template <>
 	void swap_stage(VkBufferMemoryBarrier2& t){
 		std::swap(t.srcAccessMask, t.dstAccessMask);
