@@ -149,43 +149,44 @@ public:
 	template <texture_source_prov Prov>
 	[[nodiscard("Staging buffers must be reserved until the device has finished the command")]]
 	buffer write(VkCommandBuffer command_buffer,
-	             VkRect2D region,
-	             Prov prov,
-	             std::uint32_t maxProvMipLevel = 2,
-	             const std::uint32_t baseLayer = 0,
-	             const std::uint32_t layerCount = 0 /*0 for all*/){
+			 VkRect2D region,
+			 Prov prov,
+			 std::uint32_t maxProvMipLevel = 2,
+			 const std::uint32_t baseLayer = 0,
+			 const std::uint32_t layerCount = 0 /*0 for all*/){
 		if(region.extent.width == 0 || region.extent.height == 0){
 			return {};
 		}
 		maxProvMipLevel = std::min(maxProvMipLevel, mipLevel);
 
-		constexpr VkDeviceSize bpi = 4;
+		// 修改此处：动态获取 bpi
+		const VkDeviceSize bpi = get_format_size(format_);
 
 		buffer staging{
-				templates::create_staging_buffer(
-					image.get_allocator(),
-					get_mipmap_pixels(region.extent.width * region.extent.height, maxProvMipLevel) * bpi)
-			};
-
+			templates::create_staging_buffer(
+				image.get_allocator(),
+				get_mipmap_pixels(region.extent.width * region.extent.height, maxProvMipLevel) * bpi)
+		};
 		this->write(command_buffer, region, std::move(prov), staging, maxProvMipLevel, baseLayer, layerCount);
 
 		return staging;
 	}
 
 	template <texture_source_prov Prov>
-	void write(VkCommandBuffer command_buffer,
-	           VkRect2D region,
-	           Prov prov,
-	           vk::buffer& buffer,
-	           std::uint32_t maxProvMipLevel = 3,
-	           const std::uint32_t baseLayer = 0,
-	           const std::uint32_t layerCount = 0 /*0 for all*/){
+void write(VkCommandBuffer command_buffer,
+		   VkRect2D region,
+		   Prov prov,
+		   vk::buffer& buffer,
+		   std::uint32_t maxProvMipLevel = 3,
+		   const std::uint32_t baseLayer = 0,
+		   const std::uint32_t layerCount = 0 /*0 for all*/){
 		if(region.extent.width == 0 || region.extent.height == 0){
 			return;
 		}
 		maxProvMipLevel = std::min(maxProvMipLevel, mipLevel);
 
-		constexpr VkDeviceSize bpi = 4;
+		// 修改此处：动态获取 bpi
+		const VkDeviceSize bpi = get_format_size(format_);
 
 		VkDeviceSize off{};
 		for(std::uint32_t mip_lv = 0; mip_lv < maxProvMipLevel; ++mip_lv){
@@ -196,7 +197,15 @@ public:
 			off += extent.width * extent.height * bpi;
 		}
 		const auto lc = layerCount ? layerCount : layers;
-		cmd::generate_mipmaps(command_buffer, image, buffer, region, mipLevel, maxProvMipLevel, baseLayer, lc);
+
+		// 修改此处：显式补全默认参数，以将动态的 bpi 传递给底层函数
+		cmd::generate_mipmaps(
+			command_buffer, image, buffer, region, mipLevel, maxProvMipLevel, baseLayer, lc,
+			VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+			VK_ACCESS_2_SHADER_READ_BIT,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			bpi
+		);
 	}
 
 	template <range_of<texture_bitmap_write> Rng = std::initializer_list<texture_bitmap_write>>
@@ -294,190 +303,4 @@ public:
 	}
 };
 
-export
-struct color_attachment : combined_image{
-private:
-	VkFormat format_;
-	VkImageUsageFlags usage;
-	VkSampleCountFlagBits samples;
-
-public:
-	[[nodiscard]] color_attachment() = default;
-
-	[[nodiscard]] color_attachment(
-		const allocator_usage& allocator,
-		const VkExtent2D extent,
-		VkImageUsageFlags usage,
-		VkFormat format = VK_FORMAT_R8G8B8A8_UNORM,
-		VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT) :
-		combined_image({
-			               allocator,
-			               {extent.width, extent.height, 1},
-			               usage,
-			               format,
-			               1, 1, samples, VK_IMAGE_TYPE_2D
-		               }, {
-			               .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-			               .viewType = VK_IMAGE_VIEW_TYPE_2D,
-			               .format = format,
-			               .components = {},
-			               .subresourceRange = image::default_image_subrange
-		               }),
-		usage{usage}, samples(samples), format_{format}{
-	}
-
-	void init_layout(VkCommandBuffer command_buffer) const noexcept{
-		image.init_layout(
-			command_buffer,
-			VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-			VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-		);
-	}
-
-	void set_layout_to_read_optimal(
-		VkCommandBuffer command_buffer,
-		const std::uint32_t src_queue,
-		const std::uint32_t dst_queue
-	) const noexcept{
-		vk::cmd::memory_barrier(
-			command_buffer,
-			get_image(),
-			VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-			VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-			VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
-			VK_ACCESS_2_SHADER_SAMPLED_READ_BIT,
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			vk::image::default_image_subrange,
-			src_queue,
-			dst_queue
-		);
-	}
-
-	void resize(VkExtent2D extent) noexcept{
-		image = {
-				image.get_allocator(),
-				{extent.width, extent.height, 1},
-				usage,
-				format_,
-				1, 1, samples, VK_IMAGE_TYPE_2D
-			};
-
-		image_view = {
-				image.get_device(), {
-					.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-					.image = image.get(),
-					.viewType = VK_IMAGE_VIEW_TYPE_2D,
-					.format = format_,
-					.components = {},
-					.subresourceRange = image::default_image_subrange
-				}
-			};
-	}
-
-	[[nodiscard]] VkImageUsageFlags get_usage() const{
-		return usage;
-	}
-
-	[[nodiscard]] VkSampleCountFlagBits get_samples() const{
-		return samples;
-	}
-};
-
-export
-struct storage_image : combined_image{
-	static constexpr VkImageUsageFlags default_usage = 0
-		| VK_IMAGE_USAGE_STORAGE_BIT
-		| VK_IMAGE_USAGE_TRANSFER_SRC_BIT
-		| VK_IMAGE_USAGE_TRANSFER_DST_BIT
-		| VK_IMAGE_USAGE_SAMPLED_BIT;
-
-private:
-	VkImageUsageFlags usage{};
-	VkFormat format{};
-	std::uint32_t mip_level{};
-
-public:
-	[[nodiscard]] storage_image() = default;
-
-	[[nodiscard]] storage_image(
-		allocator& allocator,
-		const VkExtent2D extent,
-		const std::uint32_t mip_level = 1,
-		const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM,
-		const VkImageUsageFlags usage = default_usage
-	)
-		: combined_image({
-			                 allocator,
-			                 {extent.width, extent.height, 1},
-			                 default_usage,
-			                 format,
-			                 mip_level, 1, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D
-		                 }, {
-			                 .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-			                 .viewType = VK_IMAGE_VIEW_TYPE_2D,
-			                 .format = format,
-			                 .components = {},
-			                 .subresourceRange = VkImageSubresourceRange{
-				                 .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-				                 .baseMipLevel = 0,
-				                 .levelCount = mip_level,
-				                 .baseArrayLayer = 0,
-				                 .layerCount = 1
-			                 }
-		                 }
-		  ), usage(usage), format{format}, mip_level(mip_level){
-	}
-
-
-	[[nodiscard]] VkFormat get_format() const{
-		return format;
-	}
-
-	[[nodiscard]] std::uint32_t get_mip_level() const{
-		return mip_level;
-	}
-
-	void resize(VkExtent2D extent) noexcept{
-		if(extent.width == image.get_extent2().width && extent.height == image.get_extent2().height) return;
-
-		image = {
-				image.get_allocator(),
-				{extent.width, extent.height, 1},
-				usage,
-				format,
-				mip_level, 1, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D
-			};
-
-		image_view = {
-				image.get_device(), {
-					.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-					.image = image.get(),
-					.viewType = VK_IMAGE_VIEW_TYPE_2D,
-					.format = format,
-					.components = {},
-					.subresourceRange = VkImageSubresourceRange{
-						.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-						.baseMipLevel = 0,
-						.levelCount = mip_level,
-						.baseArrayLayer = 0,
-						.layerCount = 1
-					}
-				}
-			};
-	}
-
-	void init_layout_general(VkCommandBuffer command_buffer) const noexcept{
-		get_image().init_layout(command_buffer,
-		                        VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
-		                        VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_SHADER_WRITE_BIT,
-		                        VK_IMAGE_LAYOUT_GENERAL
-		);
-	}
-
-	[[nodiscard]] VkImageUsageFlags get_usage() const{
-		return usage;
-	}
-};
 }

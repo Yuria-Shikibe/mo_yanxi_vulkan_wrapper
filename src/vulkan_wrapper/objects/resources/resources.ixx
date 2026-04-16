@@ -15,7 +15,7 @@ import mo_yanxi.math;
 
 namespace mo_yanxi::vk{
 	export
-	std::size_t get_format_size(VkFormat format) {
+	constexpr std::size_t get_format_size(VkFormat format) noexcept {
 		switch (format) {
 			// 8-bit formats
 		case VK_FORMAT_R8_UNORM:
