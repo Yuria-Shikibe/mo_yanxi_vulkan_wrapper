@@ -26,7 +26,7 @@ constexpr inline VkPipelineColorBlendAttachmentState discard{.colorWriteMask = 0
 constexpr inline VkPipelineColorBlendAttachmentState mask_draw{
 		.blendEnable = true,
 
-		.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+		.srcColorBlendFactor = VK_BLEND_FACTOR_ONE,
 		.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
 		.colorBlendOp = VK_BLEND_OP_ADD,
 		.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
@@ -36,7 +36,7 @@ constexpr inline VkPipelineColorBlendAttachmentState mask_draw{
 		.colorWriteMask = VK_COLOR_COMPONENT_R_BIT
 	};
 
-constexpr inline VkPipelineColorBlendAttachmentState scaled_alpha_blend{
+constexpr inline VkPipelineColorBlendAttachmentState premultiplied_alpha_blend{
 		.blendEnable = true,
 
 		.srcColorBlendFactor = VK_BLEND_FACTOR_ONE,
@@ -44,7 +44,7 @@ constexpr inline VkPipelineColorBlendAttachmentState scaled_alpha_blend{
 		.colorBlendOp = VK_BLEND_OP_ADD,
 		.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
 		.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-		.alphaBlendOp = VK_BLEND_OP_MAX,
+		.alphaBlendOp = VK_BLEND_OP_ADD,
 
 		.colorWriteMask = default_mask
 	};
