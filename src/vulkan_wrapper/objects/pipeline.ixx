@@ -297,6 +297,12 @@ public:
 		return *this;
 	}
 
+	graphic_pipeline_template& set_shaders(
+		shader_chain&& chain){
+		this->shaderChain = std::move(chain);
+		return *this;
+	}
+
 	VkPipeline create(
 		VkDevice device,
 		VkPipelineLayout layout,
