@@ -6,7 +6,6 @@ module;
 export module mo_yanxi.vk;
 
 export import :ext;
-export import :swap_chain_info;
 export import :sync;
 export import :logical_deivce;
 export import :physical_device;

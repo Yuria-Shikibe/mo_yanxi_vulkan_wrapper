@@ -48,7 +48,7 @@ namespace mo_yanxi::vk{
 			.compareEnable = false,
 			.compareOp = VK_COMPARE_OP_NEVER,
 			.minLod = 0,
-			.maxLod = 0,//VK_LOD_CLAMP_NONE,
+			.maxLod = VK_LOD_CLAMP_NONE,
 			.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
 			.unnormalizedCoordinates = false
 		};
