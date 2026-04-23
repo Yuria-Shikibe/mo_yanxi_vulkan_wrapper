@@ -54,7 +54,6 @@ namespace mo_yanxi::vk{
 
 		[[nodiscard]] queue_family_indices(VkPhysicalDevice device, VkSurfaceKHR surface){
 			std::vector<VkQueueFamilyProperties> queueFamilies = enumerate(vkGetPhysicalDeviceQueueFamilyProperties, device);
-
 			for(const auto& [index, queueFamily] : queueFamilies | std::ranges::views::enumerate){
 				if(!queueFamily.queueCount) continue;
 
@@ -62,12 +61,9 @@ namespace mo_yanxi::vk{
 					graphic = {static_cast<std::uint32_t>(index), queueFamily.queueCount};
 				}
 
-				// if(index != 0){
-					if(queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT){
-						compute = {static_cast<std::uint32_t>(index), queueFamily.queueCount};
-					}
-				// }
-
+				if(queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT){
+					compute = {static_cast<std::uint32_t>(index), queueFamily.queueCount};
+				}
 
 				//Obtain present queue
 				VkBool32 presentSupport = false;
@@ -82,8 +78,8 @@ namespace mo_yanxi::vk{
 			}
 
 			if(!valid()){
-				std::println(std::cerr, "[Vulkan] Queue Family Incomplete");
-				throw unqualified_error{"Queue Family Incomplete"};
+				// std::println(std::cerr, "[Vulkan] Queue Family Incomplete");
+				// throw unqualified_error{"Queue Family Incomplete"};
 			}
 		}
 	};
@@ -121,16 +117,17 @@ namespace mo_yanxi::vk{
 
 		[[nodiscard]] std::uint32_t rate_device() const noexcept{
 			VkPhysicalDeviceProperties deviceProperties = get_device_properties();
-
 			std::uint32_t score = 0;
 
-			// Discrete GPUs have a significant performance advantage
 			if(deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU){
-				score += 1000;
+				score += 1000000;
+			} else if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU){
+				score += 10000;
+			} else {
 			}
 
-			// Maximum possible size of textures affects graphics quality
 			score += deviceProperties.limits.maxImageDimension2D;
+			score += deviceProperties.limits.maxPushConstantsSize * 512;
 
 			return score;
 		}
@@ -139,9 +136,16 @@ namespace mo_yanxi::vk{
 			if(auto [availableExtensions, rst] = enumerate(vkEnumerateDeviceExtensionProperties, device, nullptr); rst){
 				throw vk_error{rst, "Failed to get device extensions"};
 			}else{
-				return vk::check_support(requiredExtensions, availableExtensions, &VkExtensionProperties::extensionName);
-			}
+				// 获取所有缺失的扩展
+				auto missingExtensions = vk::get_missing_support(requiredExtensions, availableExtensions, &VkExtensionProperties::extensionName);
 
+				if(!missingExtensions.empty()){
+					std::println("\t[Fail] Missing Device Extensions Supports: {}", missingExtensions);
+					return false;
+				}
+
+				return true;
+			}
 		}
 
 		[[nodiscard]] std::string get_name() const{
@@ -184,17 +188,29 @@ namespace mo_yanxi::vk{
 		}
 
 		bool valid(VkSurfaceKHR surface = nullptr, std::span<const char* const> device_extensions = {}) const{
+			std::println("  -> Checking Physical Device...");
+
 			const bool extensionsSupported = check_extension_support(device_extensions);
-			const bool featuresMeet = meet_features(&VkPhysicalDeviceFeatures::samplerAnisotropy);
+			if(!extensionsSupported){
+				return false;
+			}
 
-			if(!featuresMeet || !extensionsSupported)return false;
-
-			if(!surface)return true;
+			if(!surface) return true;
 
 			const queue_family_indices indices(device, surface);
-			const swap_chain_info swapChainSupport(device, surface);
+			if(!indices.valid()){
+				std::println(std::cerr, "\t[Fail] Missing Queue Family");
+				return false;
+			}
 
-			return indices.valid() && swapChainSupport.valid();
+			const swap_chain_info swapChainSupport(device, surface);
+			if(!swapChainSupport.valid()){
+				std::println(std::cerr, "\t[Fail] SwapChain incompatible");
+				return false;
+			}
+
+			std::println("\t[Pass] Current Device Valid");
+			return true;
 		}
 
 		void cache_properties(VkSurfaceKHR surface){

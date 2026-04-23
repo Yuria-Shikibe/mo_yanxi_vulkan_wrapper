@@ -8,7 +8,7 @@ import std;
 
 export namespace mo_yanxi::vk{
 	struct swap_chain_info{
-		static constexpr VkFormat TargetFormat = VK_FORMAT_R8G8B8A8_SRGB;
+		static constexpr VkFormat TargetFormat = VK_FORMAT_R8G8B8A8_UNORM;
 		static constexpr VkColorSpaceKHR TargetColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 
 		static constexpr VkPresentModeKHR PresentMode_Ideal = VK_PRESENT_MODE_MAILBOX_KHR;
