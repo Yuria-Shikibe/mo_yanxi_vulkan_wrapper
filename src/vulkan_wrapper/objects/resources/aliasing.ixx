@@ -81,6 +81,7 @@ protected:
     // 核心创建逻辑：调用 allocator 的别名创建函数
     void create(VkDeviceSize offset, const VkBufferCreateInfo& create_info){
        this->handle = get_allocator().create_aliasing_buffer(get_allocation(), offset, create_info);
+       size = create_info.size;
     }
 
 public:
