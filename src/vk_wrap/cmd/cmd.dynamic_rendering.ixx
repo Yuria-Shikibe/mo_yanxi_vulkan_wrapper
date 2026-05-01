@@ -90,6 +90,10 @@ namespace mo_yanxi::vk{
 			return colorAttachmentsInfo;
 		}
 
+		VkRenderingAttachmentInfo& get_depth_attachment_info() noexcept{
+			return depthInfo;
+		}
+
 		void begin_rendering(VkCommandBuffer commandBuffer, const VkRect2D& area, VkRenderingFlags flags = 0, void* pnext = nullptr) const{
 			const VkRenderingInfo info{
 				.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,

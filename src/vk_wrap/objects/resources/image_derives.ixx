@@ -49,13 +49,21 @@ public:
 		return static_cast<bool>(image);
 	}
 
-	[[nodiscard]] const ImageProv& get_image() const noexcept{
-		return image;
-	}
+		[[nodiscard]] const ImageProv& get_image() const noexcept{
+			return image;
+		}
 
-	[[nodiscard]] const vk::image_view& get_image_view() const noexcept{
-		return image_view;
-	}
+		[[nodiscard]] ImageProv& get_image() noexcept{
+			return image;
+		}
+
+		[[nodiscard]] const vk::image_view& get_image_view() const noexcept{
+			return image_view;
+		}
+
+		[[nodiscard]] vk::image_view& get_image_view() noexcept{
+			return image_view;
+		}
 
 	explicit(false) operator image_handle() const noexcept{
 		return {

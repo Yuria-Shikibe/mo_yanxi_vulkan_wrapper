@@ -38,8 +38,8 @@ target("mo_yanxi.vulkan_wrapper")
         add_defines("MO_YANXI_VULKAN_WRAPPER_ENABLE_CHECK=0")
     end
 
-    add_files("./src/vulkan_wrapper/**.cpp")
-    add_files("./src/vulkan_wrapper/**.ixx", {public = true})
+    add_files("./src/vk_wrap/**.cpp")
+    add_files("./src/vk_wrap/**.ixx", {public = true})
 
     add_includedirs("external/VulkanMemoryAllocator/include", {public = true})
 
