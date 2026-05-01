@@ -332,7 +332,7 @@ namespace mo_yanxi::vk{
 					.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
 				},
 				{
-					.usage = VMA_MEMORY_USAGE_GPU_ONLY,
+					.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
 				}
 			}{
 		}

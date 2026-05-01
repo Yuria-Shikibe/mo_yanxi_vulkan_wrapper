@@ -248,7 +248,7 @@ public:
 		const BindDescTy& binding_desc,
 		const AttrDescTy& attribute_desc
 	){
-		vertexInputInfo.emplace();
+		vertexInputInfo.emplace(VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO);
 		vertexInputInfo->vertexBindingDescriptionCount = static_cast<std::uint32_t>(std::ranges::size(binding_desc)),
 			vertexInputInfo->pVertexBindingDescriptions = std::ranges::data(binding_desc),
 			vertexInputInfo->vertexAttributeDescriptionCount = static_cast<std::uint32_t>(std::ranges::size(
