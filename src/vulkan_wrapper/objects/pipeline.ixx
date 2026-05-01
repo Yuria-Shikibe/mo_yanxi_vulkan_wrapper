@@ -265,11 +265,16 @@ public:
 		return *this;
 	}
 
-	graphic_pipeline_template& set_depth_state(const bool enableTest = true, const bool enableWrite = true){
-		depthStencilState.depthTestEnable = enableTest;
-		depthStencilState.depthWriteEnable = enableWrite;
-		return *this;
-	}
+		graphic_pipeline_template& set_depth_state(const bool enableTest = true, const bool enableWrite = true){
+			depthStencilState.depthTestEnable = enableTest;
+			depthStencilState.depthWriteEnable = enableWrite;
+			return *this;
+		}
+
+		graphic_pipeline_template& set_depth_compare_op(const VkCompareOp op) noexcept{
+			depthStencilState.depthCompareOp = op;
+			return *this;
+		}
 
 	graphic_pipeline_template& push_color_attachment_blend_state(
 		const VkPipelineColorBlendAttachmentState& blend = blending::alpha_blend
