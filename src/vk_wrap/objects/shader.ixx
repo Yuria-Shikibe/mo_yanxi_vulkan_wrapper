@@ -25,7 +25,7 @@ public:
 	template <typename T>
 		requires (std::is_trivially_copyable_v<T>)
 	[[nodiscard]] shader_module(VkDevice device, const std::span<const T> code) : device(device){
-		createShaderModule(code);
+		this->createShaderModule(code);
 	}
 
 	[[nodiscard]] shader_module(VkDevice device, const std::filesystem::path& path) : device(device),
@@ -88,9 +88,25 @@ public:
 		if(device) vkDestroyShaderModule(device, handle, nullptr);
 	}
 
-	shader_module(const shader_module& other) = delete;
+	[[nodiscard]] shader_module(const shader_module& other)
+		: device(other.device.handle), binary(other.binary), name(other.name) {
+		if (!binary.empty()) {
+			VkShaderModuleCreateInfo createInfo{VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO, nullptr, 0};
+			createInfo.codeSize = binary.size() * sizeof(std::uint32_t);
+			createInfo.pCode = binary.data();
+			if (auto rst = vkCreateShaderModule(other.device, &createInfo, nullptr, &handle)) {
+				throw vk_error(rst, "Failed to create shader module!");
+			}
+		}
+	}
+
 	shader_module(shader_module&& other) noexcept = default;
-	shader_module& operator=(const shader_module& other) = delete;
+
+	shader_module& operator=(const shader_module& other) {
+		if(this == &other) return *this;
+		return operator=(std::move(auto{other}));
+	}
+
 	shader_module& operator=(shader_module&& other) noexcept = default;
 
 private:
