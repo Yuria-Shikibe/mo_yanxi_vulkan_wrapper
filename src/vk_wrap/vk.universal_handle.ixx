@@ -26,5 +26,12 @@ export struct image_handle{
 	VkImageView image_view;
 };
 
+export struct render_output_image{
+	image_handle handle{};
+	VkExtent2D extent{};
+	VkFormat format{};
+	uint32_t index{};
+};
+
 	}
 }
