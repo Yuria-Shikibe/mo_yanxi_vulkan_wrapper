@@ -13,6 +13,11 @@ import :ext;
 
 namespace mo_yanxi::vk {
 
+	inline constexpr VkBufferUsageFlags descriptor_buffer_storage_usage =
+		VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT |
+		VK_BUFFER_USAGE_SAMPLER_DESCRIPTOR_BUFFER_BIT_EXT |
+		VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+
 	// =========================================================================
 	// 配置与属性
 	// =========================================================================
@@ -93,7 +98,7 @@ namespace mo_yanxi::vk {
 		}
 
 		explicit(false) operator VkDescriptorBufferBindingInfoEXT() const noexcept{
-			return get_bind_info(VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT_KHR | VK_BUFFER_USAGE_2_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT);
+			return get_bind_info(descriptor_buffer_storage_usage);
 		}
 
 		[[nodiscard]] VkDescriptorBufferBindingInfoEXT get_bind_info(const VkBufferUsageFlags usage) const {
@@ -195,7 +200,7 @@ namespace mo_yanxi::vk {
 			this->buffer::operator=(buffer{ allocator, {
 				.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 				.size = chunk_size * chunk_count,
-				.usage = VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+				.usage = descriptor_buffer_storage_usage,
 			}, {
 				.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 			} });
@@ -223,7 +228,7 @@ namespace mo_yanxi::vk {
 				this->buffer::operator=(buffer{ get_allocator(), {
 					.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 					.size = required_size,
-					.usage = VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+					.usage = descriptor_buffer_storage_usage,
 				}, {
 					.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 				} });
@@ -237,7 +242,7 @@ namespace mo_yanxi::vk {
 			VkPipelineLayout layout,
 			const std::uint32_t setIndex,
 			const VkDeviceSize offset = 0,
-			const VkBufferUsageFlags usage = VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT_KHR | VK_BUFFER_USAGE_2_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT
+			const VkBufferUsageFlags usage = descriptor_buffer_storage_usage
 		) const {
 			static constexpr std::uint32_t ZERO = 0;
 			descriptor_buffer_base::bind_to(commandBuffer, usage);
@@ -250,7 +255,7 @@ namespace mo_yanxi::vk {
 			VkPipelineLayout layout,
 			const std::uint32_t setIndex,
 			const std::uint32_t chunkIndex = 0,
-			const VkBufferUsageFlags usage = VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT_KHR | VK_BUFFER_USAGE_2_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT
+			const VkBufferUsageFlags usage = descriptor_buffer_storage_usage
 		) const {
 			static constexpr std::uint32_t ZERO = 0;
 			descriptor_buffer_base::bind_to(commandBuffer, usage);
@@ -340,7 +345,7 @@ namespace mo_yanxi::vk {
 			this->buffer::operator=(buffer{ allocator, {
 				.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 				.size = required_size,
-				.usage = VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+				.usage = descriptor_buffer_storage_usage,
 			}, {
 				.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 			} });
@@ -369,7 +374,7 @@ namespace mo_yanxi::vk {
 				this->buffer::operator=(buffer{ get_allocator(), {
 					.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 					.size = required_size,
-					.usage = VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+					.usage = descriptor_buffer_storage_usage,
 				}, {
 					.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 				} });
@@ -382,7 +387,7 @@ namespace mo_yanxi::vk {
 			VkPipelineLayout layout,
 			const std::uint32_t setIndex,
 			const VkDeviceSize offset = 0,
-			const VkBufferUsageFlags usage = VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT_KHR | VK_BUFFER_USAGE_2_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT
+			const VkBufferUsageFlags usage = descriptor_buffer_storage_usage
 		) const {
 			static constexpr std::uint32_t ZERO = 0;
 			descriptor_buffer_base::bind_to(commandBuffer, usage);
