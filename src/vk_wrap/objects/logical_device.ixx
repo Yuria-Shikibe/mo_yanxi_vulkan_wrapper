@@ -2,7 +2,7 @@ module;
 
 #include <vulkan/vulkan.h>
 
-export module mo_yanxi.vk:logical_deivce;
+export module mo_yanxi.vk:logical_device;
 
 export import mo_yanxi.handle_wrapper;
 import :physical_device;
