@@ -201,10 +201,10 @@ namespace mo_yanxi::vk::cmd{
 
 	export void set_viewport(VkCommandBuffer command_buffer, VkRect2D region){
 		VkViewport viewport{};
-		viewport.x = region.offset.x;
-		viewport.y = region.offset.y;
-		viewport.width = region.extent.width;
-		viewport.height = region.extent.height;
+		viewport.x = static_cast<float>(region.offset.x);
+		viewport.y = static_cast<float>(region.offset.y);
+		viewport.width = static_cast<float>(region.extent.width);
+		viewport.height = static_cast<float>(region.extent.height);
 		viewport.maxDepth = 1.0f;
 		vkCmdSetViewport(command_buffer, 0, 1, &viewport);
 	}

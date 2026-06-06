@@ -79,7 +79,7 @@ namespace mo_yanxi::vk{
 		}
 
 		void push_seq(const VkDescriptorType type, const VkShaderStageFlags stageFlags, const std::uint32_t count = 1, const VkDescriptorBindingFlags flag = 0){
-			push(bindings.size(), type, stageFlags, count, flag);
+			push((std::uint32_t)bindings.size(), type, stageFlags, count, flag);
 		}
 
 		template <std::size_t size>
@@ -147,7 +147,7 @@ namespace mo_yanxi::vk{
 		) : descriptor_layout{device, VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT, std::move(func)}{}
 
 		[[nodiscard]] std::uint32_t binding_count() const noexcept{
-			return bindings;
+			return (std::uint32_t)bindings;
 		}
 
 		[[nodiscard]] VkDevice get_device() const noexcept{
@@ -166,7 +166,7 @@ namespace mo_yanxi::vk{
 				VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO
 			};
 
-			bindingFlagsCreateInfo.bindingCount = builder_rst.flags.size();
+			bindingFlagsCreateInfo.bindingCount = (std::uint32_t)builder_rst.flags.size();
 			bindingFlagsCreateInfo.pBindingFlags = builder_rst.flags.data();
 
 

@@ -162,7 +162,7 @@ public:
 	}
 
 	sampler_descriptor_heap(const allocator_usage& allocator, const std::initializer_list<VkSamplerCreateInfo> create_infos, bool embedded = false)
-		: sampler_descriptor_heap(allocator, create_infos.size(), embedded){
+		: sampler_descriptor_heap(allocator, (std::uint32_t)create_infos.size(), embedded){
 		push_back(create_infos);
 	}
 
@@ -253,22 +253,22 @@ public:
 
 protected:
 	void push_back_samplers_(std::span<const VkSamplerCreateInfo> create_infos){
-		hybrid_buffer<VkHostAddressRangeEXT, 8> buffer{create_infos.size()};
+		hybrid_buffer<VkHostAddressRangeEXT, 8> buffer{(std::uint32_t)create_infos.size()};
 
 		const auto begin = buffer.data();
-		auto begin_idx = this->allocate(create_infos.size());
-		this->get_host_address_range(std::views::iota(begin_idx, begin_idx + create_infos.size()), begin);
-		vk::writeSamplerDescriptorsEXT(get_device(), create_infos.size(), create_infos.data(), begin);
+		auto begin_idx = this->allocate((std::uint32_t)create_infos.size());
+		this->get_host_address_range(std::views::iota(begin_idx, begin_idx + (std::uint32_t)create_infos.size()), begin);
+		vk::writeSamplerDescriptorsEXT(get_device(), (std::uint32_t)create_infos.size(), create_infos.data(), begin);
 	}
 
 	void push_back_resources_(std::span<const VkResourceDescriptorInfoEXT> create_infos){
-		hybrid_buffer<VkHostAddressRangeEXT, 8> buffer{create_infos.size()};
+		hybrid_buffer<VkHostAddressRangeEXT, 8> buffer{(std::uint32_t)create_infos.size()};
 
 		const auto begin = buffer.data();
-		auto begin_idx = this->allocate(create_infos.size());
-		this->get_host_address_range(std::views::iota(begin_idx, begin_idx + create_infos.size()), begin);
+		auto begin_idx = this->allocate((std::uint32_t)create_infos.size());
+		this->get_host_address_range(std::views::iota(begin_idx, begin_idx + (std::uint32_t)create_infos.size()), begin);
 
-		if(auto rst = writeResourceDescriptorsEXT(get_device(), create_infos.size(), create_infos.data(), begin); rst != VK_SUCCESS){
+		if(auto rst = writeResourceDescriptorsEXT(get_device(), (std::uint32_t)create_infos.size(), create_infos.data(), begin); rst != VK_SUCCESS){
 			throw vk::vk_error{rst, "Failed to write sampler d"};
 		}
 	}
@@ -560,12 +560,12 @@ protected:
 	}
 
 	std::uint32_t push_back_resources_(std::uint32_t section_idx, std::span<const VkResourceDescriptorInfoEXT> create_infos){
-		hybrid_buffer<VkHostAddressRangeEXT, 8> buffer{create_infos.size()};
+		hybrid_buffer<VkHostAddressRangeEXT, 8> buffer{(std::uint32_t)create_infos.size()};
 
 		const auto begin = buffer.data();
-		auto begin_idx = this->allocate(section_idx, create_infos.size());
-		this->get_host_address_range(section_idx, std::views::iota(begin_idx, begin_idx + create_infos.size()), begin);
-		if(auto rst = writeResourceDescriptorsEXT(get_device(), create_infos.size(), create_infos.data(), begin); rst != VK_SUCCESS){
+		auto begin_idx = this->allocate(section_idx, (std::uint32_t)create_infos.size());
+		this->get_host_address_range(section_idx, std::views::iota(begin_idx, begin_idx + (std::uint32_t)create_infos.size()), begin);
+		if(auto rst = writeResourceDescriptorsEXT(get_device(), (std::uint32_t)create_infos.size(), create_infos.data(), begin); rst != VK_SUCCESS){
 			throw vk::vk_error{rst, "Failed to write res d"};
 		}
 		// for (const auto & [ptr, size] : buffer){

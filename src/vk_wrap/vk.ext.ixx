@@ -222,7 +222,7 @@ export void setDescriptorBufferOffsetsEXT(
 	static constexpr std::uint32_t IndicesDesignator[MaxStackBufferSize]{
 			0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 		};
-	_PFN_vkCmdSetDescriptorBufferOffsetsEXT(commandBuffer, pipelineBindPoint, layout, firstSet, offsets.size(),
+	_PFN_vkCmdSetDescriptorBufferOffsetsEXT(commandBuffer, pipelineBindPoint, layout, firstSet, (std::uint32_t)offsets.size(),
 		IndicesDesignator, offsets.begin());
 }
 
@@ -251,7 +251,7 @@ export void bindThenSetDescriptorBuffers(
 	const std::span<const VkDescriptorBufferBindingInfoEXT> infos
 ){
 	bindThenSetDescriptorBuffers(commandBuffer, pipelineBindPoint, layout, firstSet, infos.data(),
-		infos.size());
+		(std::uint32_t)infos.size());
 }
 
 export void bindThenSetDescriptorBuffers(
@@ -262,7 +262,7 @@ export void bindThenSetDescriptorBuffers(
 	const std::initializer_list<const VkDescriptorBufferBindingInfoEXT> infos
 ){
 	bindThenSetDescriptorBuffers(commandBuffer, pipelineBindPoint, layout, firstSet, infos.begin(),
-		infos.size());
+		(std::uint32_t)infos.size());
 }
 
 export
