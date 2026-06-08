@@ -299,4 +299,139 @@ namespace mo_yanxi::vk{
 			return Util::getDescriptorInfo(handle);
 		}
 	};
+
+	export
+	class sampler_vector{
+		VkDevice device_{};
+		std::vector<VkSampler> samplers_{};
+
+	public:
+		[[nodiscard]] sampler_vector() = default;
+
+		template <std::ranges::input_range InputRange>
+			requires std::convertible_to<std::ranges::range_reference_t<InputRange>, VkSamplerCreateInfo>
+		[[nodiscard]] sampler_vector(VkDevice device, InputRange&& create_infos)
+			: device_{device}{
+			try{
+				this->create_from_(std::forward<InputRange>(create_infos));
+			} catch(...){
+				reset();
+				throw;
+			}
+		}
+
+		[[nodiscard]] sampler_vector(VkDevice device, std::initializer_list<VkSamplerCreateInfo> create_infos)
+			: sampler_vector(device, std::span{create_infos.begin(), create_infos.size()}){
+		}
+
+		~sampler_vector(){
+			reset();
+		}
+
+		sampler_vector(const sampler_vector&) = delete;
+
+		sampler_vector(sampler_vector&& other) noexcept
+			: device_{std::exchange(other.device_, VK_NULL_HANDLE)}
+			  , samplers_{std::move(other.samplers_)}{
+		}
+
+		sampler_vector& operator=(const sampler_vector&) = delete;
+
+		sampler_vector& operator=(sampler_vector&& other) noexcept{
+			if(this == &other){
+				return *this;
+			}
+			reset();
+			device_ = std::exchange(other.device_, VK_NULL_HANDLE);
+			samplers_ = std::move(other.samplers_);
+			return *this;
+		}
+
+		void reset() noexcept{
+			destroy_all_();
+			samplers_.clear();
+			device_ = VK_NULL_HANDLE;
+		}
+
+		[[nodiscard]] VkDevice device() const noexcept{
+			return device_;
+		}
+
+		[[nodiscard]] const VkSampler* data() const noexcept{
+			return samplers_.data();
+		}
+
+		[[nodiscard]] std::size_t size() const noexcept{
+			return samplers_.size();
+		}
+
+		[[nodiscard]] bool empty() const noexcept{
+			return samplers_.empty();
+		}
+
+		[[nodiscard]] VkSampler operator[](std::size_t index) const noexcept{
+			return samplers_[index];
+		}
+
+		[[nodiscard]] auto begin() const noexcept{
+			return samplers_.begin();
+		}
+
+		[[nodiscard]] auto end() const noexcept{
+			return samplers_.end();
+		}
+
+		[[nodiscard]] auto cbegin() const noexcept{
+			return samplers_.cbegin();
+		}
+
+		[[nodiscard]] auto cend() const noexcept{
+			return samplers_.cend();
+		}
+
+		[[nodiscard]] std::span<const VkSampler> span() const noexcept{
+			return {samplers_.data(), samplers_.size()};
+		}
+
+		[[nodiscard]] std::span<const VkSampler> as_span() const noexcept{
+			return span();
+		}
+
+		[[nodiscard]] explicit(false) operator std::span<const VkSampler>() const noexcept{
+			return span();
+		}
+
+	private:
+		template <std::ranges::input_range InputRange>
+		void create_from_(InputRange&& create_infos){
+			if constexpr(std::ranges::sized_range<InputRange>){
+				samplers_.reserve(std::ranges::size(create_infos));
+			}
+
+			for(auto&& create_info_like : create_infos){
+				if(device_ == VK_NULL_HANDLE){
+					throw std::invalid_argument{"sampler_vector requires a non-null VkDevice"};
+				}
+
+				VkSamplerCreateInfo create_info = std::forward<decltype(create_info_like)>(create_info_like);
+				samplers_.push_back(VK_NULL_HANDLE);
+				if(const auto rst = vkCreateSampler(device_, &create_info, nullptr, &samplers_.back())){
+					throw vk_error(rst, "failed to create sampler_vector sampler");
+				}
+			}
+		}
+
+		void destroy_all_() noexcept{
+			if(device_ == VK_NULL_HANDLE){
+				return;
+			}
+
+			for(auto& sampler : samplers_){
+				if(sampler != VK_NULL_HANDLE){
+					vkDestroySampler(device_, sampler, nullptr);
+					sampler = VK_NULL_HANDLE;
+				}
+			}
+		}
+	};
 }

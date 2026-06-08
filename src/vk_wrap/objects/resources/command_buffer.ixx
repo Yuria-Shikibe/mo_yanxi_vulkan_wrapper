@@ -197,7 +197,7 @@ public:
 };
 
 export
-struct transient_command : command_buffer{
+struct [[deprecated]] transient_command : command_buffer{
 	static constexpr VkCommandBufferBeginInfo BeginInfo{
 			VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 			nullptr,
